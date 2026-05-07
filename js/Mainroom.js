@@ -77,3 +77,11 @@ for (let i = 0; i < sides; i++) {
   wall.rotation.y = wallAngle;
   scene.add(wall);
 }
+
+// ---- PLAFOND ----
+const ceilGeo = new THREE.ShapeGeometry(shape);
+const ceilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });
+const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
+ceiling.rotation.x = Math.PI / 2;
+ceiling.position.y = wallHeight;
+scene.add(ceiling);

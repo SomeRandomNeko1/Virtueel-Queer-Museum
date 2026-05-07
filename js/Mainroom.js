@@ -12,7 +12,6 @@ scene.background = new THREE.Color(0x1a1a1a);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 1.7, 17);
 
-
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -31,7 +30,7 @@ scene.add(pointLight);
 // ---- PENTAGON VLOER ----
 const shape = new THREE.Shape();
 const sides = 5;
-const radius = 12;
+const radius = 15;
 
 for (let i = 0; i < sides; i++) {
   const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
@@ -67,8 +66,7 @@ for (let i = 0; i < sides; i++) {
   const cz = (z1 + z2) / 2;
   const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
 
-  if (i ===2) {
-    // muur 2 = opening naar gang
+  if (i === 2) {
     const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
     const leftWall = new THREE.Mesh(leftGeo, wallMat);
     leftWall.position.set(cx, wallHeight / 2, cz);
@@ -109,48 +107,107 @@ scene.add(ceiling);
 const gangMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
 const gangFloorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
 
-const gangFloor = new THREE.Mesh(
-  new THREE.PlaneGeometry(4, 6),
-  gangFloorMat
-);
+const gangFloor = new THREE.Mesh(new THREE.PlaneGeometry(6, 10), gangFloorMat);
 gangFloor.rotation.x = -Math.PI / 2;
-gangFloor.position.set(0, 0.01, 14);
+gangFloor.position.set(0, 0.01, 17);
 scene.add(gangFloor);
 
 const gangCeil = new THREE.Mesh(
-  new THREE.PlaneGeometry(4, 6),
+  new THREE.PlaneGeometry(6, 10),
   new THREE.MeshStandardMaterial({ color: 0xF0EAD6 })
 );
 gangCeil.rotation.x = Math.PI / 2;
-gangCeil.position.set(0, wallHeight, 14);
+gangCeil.position.set(0, wallHeight, 17);
 scene.add(gangCeil);
 
-const gangLeft = new THREE.Mesh(
-  new THREE.PlaneGeometry(6, wallHeight),
-  gangMat
-);
+const gangLeft = new THREE.Mesh(new THREE.PlaneGeometry(10, wallHeight), gangMat);
 gangLeft.rotation.y = Math.PI / 2;
-gangLeft.position.set(-2, wallHeight / 2, 14);
+gangLeft.position.set(-3, wallHeight / 2, 17);
 scene.add(gangLeft);
 
-const gangRight = new THREE.Mesh(
-  new THREE.PlaneGeometry(6, wallHeight),
-  gangMat
-);
+const gangRight = new THREE.Mesh(new THREE.PlaneGeometry(10, wallHeight), gangMat);
 gangRight.rotation.y = -Math.PI / 2;
-gangRight.position.set(2, wallHeight / 2, 14);
+gangRight.position.set(3, wallHeight / 2, 17);
 scene.add(gangRight);
 
-const gangBack = new THREE.Mesh(
-  new THREE.PlaneGeometry(4, wallHeight),
-  gangMat
-);
-gangBack.position.set(0, wallHeight / 2, 19);
+const gangBack = new THREE.Mesh(new THREE.PlaneGeometry(6, wallHeight), gangMat);
+gangBack.position.set(0, wallHeight / 2, 22);
 scene.add(gangBack);
 
 const gangLight = new THREE.PointLight(0xffffff, 0.8);
-gangLight.position.set(0, wallHeight - 1, 14);
+gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
+
+// ---- ART ROOMS ----
+const roomDepth = 10;
+const roomWidth = 10;
+const roomPositions = [];
+const roomWallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
+const roomFloorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+const roomCeilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });
+
+for (let i = 0; i < sides; i++) {
+  if (i === 2) continue;
+
+  const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
+  const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
+
+  const x1 = Math.cos(angle1) * radius;
+  const z1 = Math.sin(angle1) * radius;
+  const x2 = Math.cos(angle2) * radius;
+  const z2 = Math.sin(angle2) * radius;
+
+  const cx = (x1 + x2) / 2;
+  const cz = (z1 + z2) / 2;
+  const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
+
+  const nx = -Math.sin(wallAngle);
+  const nz = -Math.cos(wallAngle);
+
+  // kamer centrum
+  const rx = cx + nx * roomDepth / 2;
+  const rz = cz + nz * roomDepth / 2;
+  roomPositions.push({ rx, rz });
+
+  // hulp functie om muur te plaatsen relatief aan kamer
+  function addWall(offsetX, offsetZ, rotY, w, h) {
+    const geo = new THREE.PlaneGeometry(w, h);
+    const mesh = new THREE.Mesh(geo, roomWallMat);
+    mesh.position.set(rx + offsetX, h / 2, rz + offsetZ);
+    mesh.rotation.y = rotY;
+    scene.add(mesh);
+  }
+
+  // achtermuur (verste van pentagon)
+  const backX = nx * roomDepth;
+  const backZ = nz * roomDepth;
+  addWall(nx * roomDepth / 2, nz * roomDepth / 2, wallAngle + Math.PI, roomWidth, wallHeight);
+
+  // linker zijmuur
+  const perpX = -Math.sin(wallAngle + Math.PI / 2) * roomWidth / 2;
+  const perpZ = -Math.cos(wallAngle + Math.PI / 2) * roomWidth / 2;
+  addWall(-perpX, -perpZ, wallAngle + Math.PI / 2, roomDepth, wallHeight);
+
+  // rechter zijmuur
+  addWall(perpX, perpZ, wallAngle - Math.PI / 2, roomDepth, wallHeight);
+
+  // vloer
+  const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), roomFloorMat);
+  floorMesh.rotation.x = -Math.PI / 2;
+  floorMesh.position.set(rx, 0.01, rz);
+  scene.add(floorMesh);
+
+  // plafond
+  const ceilMesh = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), roomCeilMat);
+  ceilMesh.rotation.x = Math.PI / 2;
+  ceilMesh.position.set(rx, wallHeight, rz);
+  scene.add(ceilMesh);
+
+  // licht
+  const roomLight = new THREE.PointLight(0xffffff, 0.8);
+  roomLight.position.set(rx, wallHeight - 1, rz);
+  scene.add(roomLight);
+}
 
 // ---- CONTROLS ----
 let yaw = 0;
@@ -194,15 +251,16 @@ function updateMovement() {
 }
 
 function isAllowed(x, z) {
-  const inGang = x > -3 && x < 3 && z > 7 && z < 19;
+  const inGang = x > -3 && x < 3 && z > 10 && z < 22;
   const inHal = insidePentagon(x, z);
-  return inGang || inHal;
+  const inRoom = roomPositions.some(r => Math.abs(x - r.rx) < 5 && Math.abs(z - r.rz) < 5);
+  return inGang || inHal || inRoom;
 }
 
 function insidePentagon(x, z) {
   for (let i = 0; i < sides; i++) {
-    if (i === 3) continue; // sla de ingang muur over
-    
+    if (i === 2) continue;
+
     const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
     const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
 

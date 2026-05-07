@@ -22,6 +22,7 @@ window.addEventListener('resize', () => {
 // ---- ANIMATIE LOOP ----
 function animate() {
   requestAnimationFrame(animate);
+  updateMovement();
   renderer.render(scene, camera);
 }
 animate();
@@ -85,3 +86,42 @@ const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
 ceiling.rotation.x = Math.PI / 2;
 ceiling.position.y = wallHeight;
 scene.add(ceiling);
+
+// ---- CONTROLS ----
+let yaw = 0;
+let pitch = 0;
+const speed = 0.05;
+let keys = {};
+
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+canvas.addEventListener('click', () => canvas.requestPointerLock());
+
+document.addEventListener('mousemove', e => {
+  if (document.pointerLockElement === canvas) {
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+  }
+});
+
+// ---- MOVEMENT ----
+function updateMovement() {
+  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+
+  const next = camera.position.clone();
+
+  if (keys['KeyW']) next.addScaledVector(forward, speed);
+  if (keys['KeyS']) next.addScaledVector(forward, -speed);
+  if (keys['KeyA']) next.addScaledVector(right, -speed);
+  if (keys['KeyD']) next.addScaledVector(right, speed);
+
+  camera.position.x = next.x;
+  camera.position.z = next.z;
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+}

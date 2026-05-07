@@ -33,3 +33,22 @@ scene.add(ambientLight);
 const pointLight = new THREE.PointLight(0xffffff, 1);
 pointLight.position.set(0, 4, 0);
 scene.add(pointLight);
+
+// ---- PENTAGON VLOER ----
+const shape = new THREE.Shape();
+const sides = 5;
+const radius = 8;
+
+for (let i = 0; i < sides; i++) {
+  const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
+  const x = Math.cos(angle) * radius;
+  const y = Math.sin(angle) * radius;
+  if (i === 0) shape.moveTo(x, y);
+  else shape.lineTo(x, y);
+}
+
+const floorGeo = new THREE.ShapeGeometry(shape);
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);

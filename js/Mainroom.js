@@ -194,13 +194,15 @@ function updateMovement() {
 }
 
 function isAllowed(x, z) {
-  const inGang = x > -2 && x < 2 && z > 9 && z < 15;
+  const inGang = x > -2 && x < 2 && z > 5 && z < 15;
   const inHal = insidePentagon(x, z);
   return inGang || inHal;
 }
 
 function insidePentagon(x, z) {
   for (let i = 0; i < sides; i++) {
+    if (i === 3) continue; // sla de ingang muur over
+    
     const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
     const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
 

@@ -25,3 +25,11 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
+// ---- LICHT ----
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0xffffff, 1);
+pointLight.position.set(0, 4, 0);
+scene.add(pointLight);

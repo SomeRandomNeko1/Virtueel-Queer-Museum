@@ -52,3 +52,28 @@ const floorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
+
+// ---- MUREN ----
+const wallHeight = 5;
+const wallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
+
+for (let i = 0; i < sides; i++) {
+  const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
+  const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
+
+  const x1 = Math.cos(angle1) * radius;
+  const z1 = Math.sin(angle1) * radius;
+  const x2 = Math.cos(angle2) * radius;
+  const z2 = Math.sin(angle2) * radius;
+
+  const wallLength = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+  const cx = (x1 + x2) / 2;
+  const cz = (z1 + z2) / 2;
+  const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
+
+  const wallGeo = new THREE.PlaneGeometry(wallLength, wallHeight);
+  const wall = new THREE.Mesh(wallGeo, wallMat);
+  wall.position.set(cx, wallHeight / 2, cz);
+  wall.rotation.y = wallAngle;
+  scene.add(wall);
+}

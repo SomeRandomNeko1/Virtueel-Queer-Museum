@@ -183,12 +183,39 @@ function updateMovement() {
   if (keys['KeyA']) next.addScaledVector(right, -speed);
   if (keys['KeyD']) next.addScaledVector(right, speed);
 
-  camera.position.x = next.x;
-  camera.position.z = next.z;
+  if (isAllowed(next.x, next.z)) {
+    camera.position.x = next.x;
+    camera.position.z = next.z;
+  }
 
   camera.rotation.order = 'YXZ';
   camera.rotation.y = yaw;
   camera.rotation.x = pitch;
+}
+
+function isAllowed(x, z) {
+  const inGang = x > -2 && x < 2 && z > 9 && z < 15;
+  const inHal = insidePentagon(x, z);
+  return inGang || inHal;
+}
+
+function insidePentagon(x, z) {
+  for (let i = 0; i < sides; i++) {
+    const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
+    const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
+
+    const x1 = Math.cos(angle1) * radius;
+    const z1 = Math.sin(angle1) * radius;
+    const x2 = Math.cos(angle2) * radius;
+    const z2 = Math.sin(angle2) * radius;
+
+    const nx = -(z2 - z1);
+    const nz = x2 - x1;
+
+    const dot = (x - x1) * nx + (z - z1) * nz;
+    if (dot < 0.3) return false;
+  }
+  return true;
 }
 
 // ---- ANIMATIE LOOP ----

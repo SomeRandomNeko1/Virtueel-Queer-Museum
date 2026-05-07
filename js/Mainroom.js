@@ -10,7 +10,7 @@ scene.background = new THREE.Color(0x1a1a1a);
 
 // ---- CAMERA ----
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.7, 13);
+camera.position.set(0, 1.7, 17);
 
 
 // ---- RESIZE ----
@@ -31,7 +31,7 @@ scene.add(pointLight);
 // ---- PENTAGON VLOER ----
 const shape = new THREE.Shape();
 const sides = 5;
-const radius = 8;
+const radius = 12;
 
 for (let i = 0; i < sides; i++) {
   const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
@@ -114,7 +114,7 @@ const gangFloor = new THREE.Mesh(
   gangFloorMat
 );
 gangFloor.rotation.x = -Math.PI / 2;
-gangFloor.position.set(0, 0.01, 12);
+gangFloor.position.set(0, 0.01, 14);
 scene.add(gangFloor);
 
 const gangCeil = new THREE.Mesh(
@@ -122,7 +122,7 @@ const gangCeil = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: 0xF0EAD6 })
 );
 gangCeil.rotation.x = Math.PI / 2;
-gangCeil.position.set(0, wallHeight, 12);
+gangCeil.position.set(0, wallHeight, 14);
 scene.add(gangCeil);
 
 const gangLeft = new THREE.Mesh(
@@ -130,7 +130,7 @@ const gangLeft = new THREE.Mesh(
   gangMat
 );
 gangLeft.rotation.y = Math.PI / 2;
-gangLeft.position.set(-2, wallHeight / 2, 12);
+gangLeft.position.set(-2, wallHeight / 2, 14);
 scene.add(gangLeft);
 
 const gangRight = new THREE.Mesh(
@@ -138,18 +138,18 @@ const gangRight = new THREE.Mesh(
   gangMat
 );
 gangRight.rotation.y = -Math.PI / 2;
-gangRight.position.set(2, wallHeight / 2, 12);
+gangRight.position.set(2, wallHeight / 2, 14);
 scene.add(gangRight);
 
 const gangBack = new THREE.Mesh(
   new THREE.PlaneGeometry(4, wallHeight),
   gangMat
 );
-gangBack.position.set(0, wallHeight / 2, 15);
+gangBack.position.set(0, wallHeight / 2, 19);
 scene.add(gangBack);
 
 const gangLight = new THREE.PointLight(0xffffff, 0.8);
-gangLight.position.set(0, wallHeight - 1, 12);
+gangLight.position.set(0, wallHeight - 1, 14);
 scene.add(gangLight);
 
 // ---- CONTROLS ----
@@ -194,7 +194,7 @@ function updateMovement() {
 }
 
 function isAllowed(x, z) {
-  const inGang = x > -2 && x < 2 && z > 5 && z < 15;
+  const inGang = x > -3 && x < 3 && z > 7 && z < 19;
   const inHal = insidePentagon(x, z);
   return inGang || inHal;
 }

@@ -10,7 +10,8 @@ scene.background = new THREE.Color(0x1a1a1a);
 
 // ---- CAMERA ----
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.7, 0);
+camera.position.set(0, 1.7, 13);
+
 
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
@@ -18,14 +19,6 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
-
-// ---- ANIMATIE LOOP ----
-function animate() {
-  requestAnimationFrame(animate);
-  updateMovement();
-  renderer.render(scene, camera);
-}
-animate();
 
 // ---- LICHT ----
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -56,6 +49,8 @@ scene.add(floor);
 
 // ---- MUREN ----
 const wallHeight = 5;
+const doorHeight = 3;
+const openingWidth = 3;
 const wallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
 
 for (let i = 0; i < sides; i++) {
@@ -72,11 +67,34 @@ for (let i = 0; i < sides; i++) {
   const cz = (z1 + z2) / 2;
   const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
 
-  const wallGeo = new THREE.PlaneGeometry(wallLength, wallHeight);
-  const wall = new THREE.Mesh(wallGeo, wallMat);
-  wall.position.set(cx, wallHeight / 2, cz);
-  wall.rotation.y = wallAngle;
-  scene.add(wall);
+  if (i ===2) {
+    // muur 2 = opening naar gang
+    const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+    const leftWall = new THREE.Mesh(leftGeo, wallMat);
+    leftWall.position.set(cx, wallHeight / 2, cz);
+    leftWall.rotation.y = wallAngle;
+    leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
+    scene.add(leftWall);
+
+    const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+    const rightWall = new THREE.Mesh(rightGeo, wallMat);
+    rightWall.position.set(cx, wallHeight / 2, cz);
+    rightWall.rotation.y = wallAngle;
+    rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
+    scene.add(rightWall);
+
+    const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
+    const topWall = new THREE.Mesh(topGeo, wallMat);
+    topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
+    topWall.rotation.y = wallAngle;
+    scene.add(topWall);
+  } else {
+    const wallGeo = new THREE.PlaneGeometry(wallLength, wallHeight);
+    const wall = new THREE.Mesh(wallGeo, wallMat);
+    wall.position.set(cx, wallHeight / 2, cz);
+    wall.rotation.y = wallAngle;
+    scene.add(wall);
+  }
 }
 
 // ---- PLAFOND ----
@@ -86,6 +104,53 @@ const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
 ceiling.rotation.x = Math.PI / 2;
 ceiling.position.y = wallHeight;
 scene.add(ceiling);
+
+// ---- ENTREE GANG ----
+const gangMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
+const gangFloorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+
+const gangFloor = new THREE.Mesh(
+  new THREE.PlaneGeometry(4, 6),
+  gangFloorMat
+);
+gangFloor.rotation.x = -Math.PI / 2;
+gangFloor.position.set(0, 0.01, 12);
+scene.add(gangFloor);
+
+const gangCeil = new THREE.Mesh(
+  new THREE.PlaneGeometry(4, 6),
+  new THREE.MeshStandardMaterial({ color: 0xF0EAD6 })
+);
+gangCeil.rotation.x = Math.PI / 2;
+gangCeil.position.set(0, wallHeight, 12);
+scene.add(gangCeil);
+
+const gangLeft = new THREE.Mesh(
+  new THREE.PlaneGeometry(6, wallHeight),
+  gangMat
+);
+gangLeft.rotation.y = Math.PI / 2;
+gangLeft.position.set(-2, wallHeight / 2, 12);
+scene.add(gangLeft);
+
+const gangRight = new THREE.Mesh(
+  new THREE.PlaneGeometry(6, wallHeight),
+  gangMat
+);
+gangRight.rotation.y = -Math.PI / 2;
+gangRight.position.set(2, wallHeight / 2, 12);
+scene.add(gangRight);
+
+const gangBack = new THREE.Mesh(
+  new THREE.PlaneGeometry(4, wallHeight),
+  gangMat
+);
+gangBack.position.set(0, wallHeight / 2, 15);
+scene.add(gangBack);
+
+const gangLight = new THREE.PointLight(0xffffff, 0.8);
+gangLight.position.set(0, wallHeight - 1, 12);
+scene.add(gangLight);
 
 // ---- CONTROLS ----
 let yaw = 0;
@@ -125,3 +190,11 @@ function updateMovement() {
   camera.rotation.y = yaw;
   camera.rotation.x = pitch;
 }
+
+// ---- ANIMATIE LOOP ----
+function animate() {
+  requestAnimationFrame(animate);
+  updateMovement();
+  renderer.render(scene, camera);
+}
+animate();

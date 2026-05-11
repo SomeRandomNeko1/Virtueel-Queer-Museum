@@ -20,7 +20,7 @@ window.addEventListener('resize', () => {
 });
 
 // ---- LICHT ----
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
 scene.add(ambientLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 1);
@@ -210,41 +210,63 @@ for (let i = 0; i < sides; i++) {
   ceilMesh.position.set(rx, wallHeight, rz);
   scene.add(ceilMesh);
 
-  const roomLight = new THREE.PointLight(0xffffff, 0.8);
+  const roomLight = new THREE.PointLight(0xffffff, 0.3);
   roomLight.position.set(rx, wallHeight - 1, rz);
   scene.add(roomLight);
 }
 
 // ---- SCHILDERIJEN ----
-const textureLoader = new THREE.TextureLoader();
-
-const schilderijen = [
-  'art/schilderij1.jpg',
-  'art/schilderij2.jpg',
-  'art/schilderij3.jpg',
-  'art/schilderij4.jpg',
-];
-
 roomPositions.forEach((kamer, i) => {
-  const texture = textureLoader.load(schilderijen[i]);
-  const kunstMat = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide });
-  const kunstGeo = new THREE.PlaneGeometry(3, 2);
-  const kunst = new THREE.Mesh(kunstGeo, kunstMat);
-
   const angle = doors[i].wallAngle;
-
-  // achtermuur richting
   const wx = Math.sin(angle);
   const wz = Math.cos(angle);
+  const px = Math.cos(angle);
+  const pz = -Math.sin(angle);
 
-  kunst.position.set(
-    kamer.rx + wx * (roomDepth / 2 - 8),
-    2.5,
-    kamer.rz + wz * (roomDepth / 2 - 8)
-  );
-  kunst.rotation.y = angle;
+  // achtermuur — 3 schilderijen
+  [-2.5, 0, 2.5].forEach(offset => {
+    const kunst = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 1.5),
+      new THREE.MeshStandardMaterial({ color: 0x333333 })
+    );
+    kunst.position.set(
+      kamer.rx + wx * (roomDepth / 2 - 9) + px * offset,
+      2.5,
+      kamer.rz + wz * (roomDepth / 2 - 9) + pz * offset
+    );
+    kunst.rotation.y = angle;
+    scene.add(kunst);
+  });
 
-  scene.add(kunst);
+  // linker zijmuur — 3 schilderijen
+  [-2.5, 0, 2.5].forEach(offset => {
+    const kunst = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 1.5),
+      new THREE.MeshStandardMaterial({ color: 0x333333 })
+    );
+    kunst.position.set(
+      kamer.rx + px * (roomWidth / 2 - 0.1) + wx * offset,
+      2.5,
+      kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * offset
+    );
+    kunst.rotation.y = angle - Math.PI / 2;
+    scene.add(kunst);
+  });
+
+  // rechter zijmuur — 3 schilderijen
+  [-2.5, 0, 2.5].forEach(offset => {
+    const kunst = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 1.5),
+      new THREE.MeshStandardMaterial({ color: 0x333333 })
+    );
+    kunst.position.set(
+      kamer.rx - px * (roomWidth / 2 - 0.1) + wx * offset,
+      2.5,
+      kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * offset
+    );
+    kunst.rotation.y = angle + Math.PI / 2;
+    scene.add(kunst);
+  });
 });
 
 // ---- CONTROLS ----

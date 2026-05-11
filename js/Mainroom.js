@@ -20,12 +20,33 @@ window.addEventListener('resize', () => {
 });
 
 // ---- LICHT ----
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+const ambientLight = new THREE.AmbientLight(0xfff5e0, 0.3);
 scene.add(ambientLight);
 
-const pointLight = new THREE.PointLight(0xffffff, 1);
-pointLight.position.set(0, 4, 0);
-scene.add(pointLight);
+// hoofdlamp hal
+const halLamp = new THREE.PointLight(0xffd27f, 1.5, 30);
+halLamp.position.set(0, 4.8, 0);
+scene.add(halLamp);
+
+// lamp geometry — zichtbare lamp
+const lampGeo = new THREE.SphereGeometry(0.15, 16, 16);
+const lampMat = new THREE.MeshStandardMaterial({ 
+  color: 0xffd27f, 
+  emissive: 0xffd27f, 
+  emissiveIntensity: 2 
+});
+const lampMesh = new THREE.Mesh(lampGeo, lampMat);
+lampMesh.position.set(0, 4.8, 0);
+scene.add(lampMesh);
+
+// gang lamp
+const gangLamp = new THREE.PointLight(0xffd27f, 0.8, 15);
+gangLamp.position.set(0, 4.8, 17);
+scene.add(gangLamp);
+
+const gangLampMesh = new THREE.Mesh(lampGeo, lampMat);
+gangLampMesh.position.set(0, 4.8, 17);
+scene.add(gangLampMesh);
 
 // ---- PENTAGON VLOER ----
 const shape = new THREE.Shape();

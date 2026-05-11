@@ -10,7 +10,7 @@ scene.background = new THREE.Color(0x1a1a1a);
 
 // ---- CAMERA ----
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.7, 17);
+camera.position.set(0, 20, 17);
 
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
@@ -142,6 +142,7 @@ scene.add(gangLight);
 const roomDepth = 10;
 const roomWidth = 10;
 const roomPositions = [];
+const doors = [];
 const roomWallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
 const roomFloorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
 const roomCeilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });
@@ -164,12 +165,12 @@ for (let i = 0; i < sides; i++) {
   const nx = -Math.sin(wallAngle);
   const nz = -Math.cos(wallAngle);
 
-  // kamer centrum
   const rx = cx + nx * roomDepth / 2;
   const rz = cz + nz * roomDepth / 2;
-  roomPositions.push({ rx, rz });
 
-  // hulp functie om muur te plaatsen relatief aan kamer
+  roomPositions.push({ rx, rz });
+  doors.push({ wallAngle });
+
   function addWall(offsetX, offsetZ, rotY, w, h) {
     const geo = new THREE.PlaneGeometry(w, h);
     const mesh = new THREE.Mesh(geo, roomWallMat);
@@ -178,36 +179,49 @@ for (let i = 0; i < sides; i++) {
     scene.add(mesh);
   }
 
-  // achtermuur (verste van pentagon)
-  const backX = nx * roomDepth;
-  const backZ = nz * roomDepth;
   addWall(nx * roomDepth / 2, nz * roomDepth / 2, wallAngle + Math.PI, roomWidth, wallHeight);
 
-  // linker zijmuur
   const perpX = -Math.sin(wallAngle + Math.PI / 2) * roomWidth / 2;
   const perpZ = -Math.cos(wallAngle + Math.PI / 2) * roomWidth / 2;
   addWall(-perpX, -perpZ, wallAngle + Math.PI / 2, roomDepth, wallHeight);
-
-  // rechter zijmuur
   addWall(perpX, perpZ, wallAngle - Math.PI / 2, roomDepth, wallHeight);
 
-  // vloer
   const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), roomFloorMat);
   floorMesh.rotation.x = -Math.PI / 2;
   floorMesh.position.set(rx, 0.01, rz);
   scene.add(floorMesh);
 
-  // plafond
   const ceilMesh = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), roomCeilMat);
   ceilMesh.rotation.x = Math.PI / 2;
   ceilMesh.position.set(rx, wallHeight, rz);
   scene.add(ceilMesh);
 
-  // licht
   const roomLight = new THREE.PointLight(0xffffff, 0.8);
   roomLight.position.set(rx, wallHeight - 1, rz);
   scene.add(roomLight);
 }
+
+// ---- SCHILDERIJEN ----
+const textureLoader = new THREE.TextureLoader();
+
+const schilderijen = [
+  'art/schilderij1.jpg',
+  'art/schilderij2.jpg',
+  'art/schilderij3.jpg',
+  'art/schilderij4.jpg',
+];
+
+roomPositions.forEach((kamer, i) => {
+  const texture = textureLoader.load(schilderijen[i]);
+  const kunstMat = new THREE.MeshStandardMaterial({ map: texture });
+  const kunstGeo = new THREE.PlaneGeometry(3, 2);
+  const kunst = new THREE.Mesh(kunstGeo, kunstMat);
+
+  kunst.position.set(kamer.rx, 2.5, kamer.rz);
+  kunst.rotation.y = doors[i].wallAngle;
+
+  scene.add(kunst);
+});
 
 // ---- CONTROLS ----
 let yaw = 0;

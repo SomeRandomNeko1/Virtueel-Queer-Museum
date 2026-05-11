@@ -336,6 +336,81 @@ roomPositions.forEach((kamer, i) => {
   });
 });
 
+// ---- SPOTLIGHTS OP SCHILDERIJEN ----
+roomPositions.forEach((kamer, i) => {
+  const angle = doors[i].wallAngle;
+  const wx = Math.sin(angle);
+  const wz = Math.cos(angle);
+  const px = Math.cos(angle);
+  const pz = -Math.sin(angle);
+
+  const spotMat = new THREE.MeshStandardMaterial({ 
+    color: 0xffffff, 
+    emissive: 0xffffff, 
+    emissiveIntensity: 2 
+  });
+
+  // achtermuur spots
+  [-2.5, 0, 2.5].forEach(offset => {
+    const spot = new THREE.SpotLight(0xfff5e0, 1.5, 8, Math.PI / 8, 0.3);
+    spot.position.set(
+      kamer.rx + wx * (roomDepth / 2 - 9) + px * offset,
+      wallHeight - 0.3,
+      kamer.rz + wz * (roomDepth / 2 - 9) + pz * offset
+    );
+    spot.target.position.set(
+      kamer.rx + wx * (roomDepth / 2 - 9) + px * offset,
+      2.5,
+      kamer.rz + wz * (roomDepth / 2 - 9) + pz * offset
+    );
+    scene.add(spot);
+    scene.add(spot.target);
+    const spotMesh = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), spotMat);
+    spotMesh.position.copy(spot.position);
+    scene.add(spotMesh);
+  });
+
+  // linker zijmuur spots
+  [-2.5, 0, 2.5].forEach(offset => {
+    const spot = new THREE.SpotLight(0xfff5e0, 1.5, 8, Math.PI / 8, 0.3);
+    spot.position.set(
+      kamer.rx + px * (roomWidth / 2 - 0.1) + wx * offset,
+      wallHeight - 0.3,
+      kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * offset
+    );
+    spot.target.position.set(
+      kamer.rx + px * (roomWidth / 2 - 0.1) + wx * offset,
+      2.5,
+      kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * offset
+    );
+    scene.add(spot);
+    scene.add(spot.target);
+    const spotMesh = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), spotMat);
+    spotMesh.position.copy(spot.position);
+    scene.add(spotMesh);
+  });
+
+  // rechter zijmuur spots
+  [-2.5, 0, 2.5].forEach(offset => {
+    const spot = new THREE.SpotLight(0xfff5e0, 1.5, 8, Math.PI / 8, 0.3);
+    spot.position.set(
+      kamer.rx - px * (roomWidth / 2 - 0.1) + wx * offset,
+      wallHeight - 0.3,
+      kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * offset
+    );
+    spot.target.position.set(
+      kamer.rx - px * (roomWidth / 2 - 0.1) + wx * offset,
+      2.5,
+      kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * offset
+    );
+    scene.add(spot);
+    scene.add(spot.target);
+    const spotMesh = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), spotMat);
+    spotMesh.position.copy(spot.position);
+    scene.add(spotMesh);
+  });
+});
+
 // ---- CONTROLS ----
 let yaw = 0;
 let pitch = 0;

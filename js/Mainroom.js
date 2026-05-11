@@ -10,7 +10,7 @@ scene.background = new THREE.Color(0x1a1a1a);
 
 // ---- CAMERA ----
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 20, 17);
+camera.position.set(0, 1.9, 17);
 
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
@@ -140,6 +140,26 @@ const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
 ceiling.rotation.x = Math.PI / 2;
 ceiling.position.y = wallHeight;
 scene.add(ceiling);
+// ---- BALIE ----
+const balieMat = new THREE.MeshStandardMaterial({ color: 0x5c3d1e, side: THREE.DoubleSide });
+
+// ronde balie wand — open aan achterkant
+const balieWand = new THREE.Mesh(
+  new THREE.CylinderGeometry(2, 2, 1.1, 32, 1, true, 0, Math.PI * 1.5),
+  balieMat
+);
+balieWand.position.set(0, 0.55, 0);
+scene.add(balieWand);
+
+// balie blad
+const balieTop = new THREE.Mesh(
+  new THREE.CylinderGeometry(2.2, 2.2, 0.1, 32, 1, false, 0, Math.PI * 1.5),
+  balieMat
+);
+balieTop.position.set(0, 1.1, 0);
+balieWand.rotation.y = Math.PI / -1.5;
+balieTop.rotation.y = Math.PI / -1.5;
+scene.add(balieTop);
 
 // ---- ENTREE GANG ----
 const gangMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });

@@ -493,3 +493,5 @@ console.log('doors:', doors);
 console.log('muur cx/cz:', cx, cz);
 console.log('kamer rx/rz:', rx, rz);
 console.log('nx/nz:', nx, nz);
+
+

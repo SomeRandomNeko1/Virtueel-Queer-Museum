@@ -46,6 +46,15 @@ const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
+// extra vloer om gaten te vullen
+const extraFloor = new THREE.Mesh(
+  new THREE.CircleGeometry(28, 64),
+  new THREE.MeshStandardMaterial({ color: 0x8B7355 })
+);
+extraFloor.rotation.x = -Math.PI / 2;
+extraFloor.position.y = -0.01;
+scene.add(extraFloor);
+
 // ---- MUREN ----
 const wallHeight = 5;
 const doorHeight = 3;
@@ -153,8 +162,8 @@ gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
 
 // ---- ART ROOMS ----
-const roomDepth = 10;
-const roomWidth = 10;
+const roomDepth = 12;
+const roomWidth = 12;
 const roomPositions = [];
 const doors = [];
 const roomWallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
@@ -202,11 +211,13 @@ for (let i = 0; i < sides; i++) {
 
   const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), roomFloorMat);
   floorMesh.rotation.x = -Math.PI / 2;
+  floorMesh.rotation.z = wallAngle;
   floorMesh.position.set(rx, 0.01, rz);
   scene.add(floorMesh);
 
   const ceilMesh = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), roomCeilMat);
   ceilMesh.rotation.x = Math.PI / 2;
+  ceilMesh.rotation.z = -wallAngle;
   ceilMesh.position.set(rx, wallHeight, rz);
   scene.add(ceilMesh);
 
@@ -313,7 +324,7 @@ function updateMovement() {
 function isAllowed(x, z) {
   const inGang = x > -3 && x < 3 && z > 10 && z < 22;
   const inHal = insidePentagon(x, z);
-  const inRoom = roomPositions.some(r => Math.abs(x - r.rx) < 5 && Math.abs(z - r.rz) < 5);
+  const inRoom = roomPositions.some(r => Math.abs(x - r.rx) < 6 && Math.abs(z - r.rz) < 6);
   return inGang || inHal || inRoom;
 }
 

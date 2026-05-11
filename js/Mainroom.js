@@ -86,13 +86,27 @@ for (let i = 0; i < sides; i++) {
     topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
     topWall.rotation.y = wallAngle;
     scene.add(topWall);
-  } else {
-    const wallGeo = new THREE.PlaneGeometry(wallLength, wallHeight);
-    const wall = new THREE.Mesh(wallGeo, wallMat);
-    wall.position.set(cx, wallHeight / 2, cz);
-    wall.rotation.y = wallAngle;
-    scene.add(wall);
-  }
+  } else if (i !== 2) {
+  const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+  const leftWall = new THREE.Mesh(leftGeo, wallMat);
+  leftWall.position.set(cx, wallHeight / 2, cz);
+  leftWall.rotation.y = wallAngle;
+  leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
+  scene.add(leftWall);
+
+  const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+  const rightWall = new THREE.Mesh(rightGeo, wallMat);
+  rightWall.position.set(cx, wallHeight / 2, cz);
+  rightWall.rotation.y = wallAngle;
+  rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
+  scene.add(rightWall);
+
+  const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
+  const topWall = new THREE.Mesh(topGeo, wallMat);
+  topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
+  topWall.rotation.y = wallAngle;
+  scene.add(topWall);
+}
 }
 
 // ---- PLAFOND ----

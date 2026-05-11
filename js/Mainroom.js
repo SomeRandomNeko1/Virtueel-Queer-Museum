@@ -213,12 +213,22 @@ const schilderijen = [
 
 roomPositions.forEach((kamer, i) => {
   const texture = textureLoader.load(schilderijen[i]);
-  const kunstMat = new THREE.MeshStandardMaterial({ map: texture });
+  const kunstMat = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide });
   const kunstGeo = new THREE.PlaneGeometry(3, 2);
   const kunst = new THREE.Mesh(kunstGeo, kunstMat);
 
-  kunst.position.set(kamer.rx, 2.5, kamer.rz);
-  kunst.rotation.y = doors[i].wallAngle;
+  const angle = doors[i].wallAngle;
+
+  // achtermuur richting
+  const wx = Math.sin(angle);
+  const wz = Math.cos(angle);
+
+  kunst.position.set(
+    kamer.rx + wx * (roomDepth / 2 - 8),
+    2.5,
+    kamer.rz + wz * (roomDepth / 2 - 8)
+  );
+  kunst.rotation.y = angle;
 
   scene.add(kunst);
 });
@@ -299,3 +309,6 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
+console.log('roomPositions:', roomPositions);
+console.log('doors:', doors);

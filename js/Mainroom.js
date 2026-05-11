@@ -41,15 +41,30 @@ for (let i = 0; i < sides; i++) {
 }
 
 const floorGeo = new THREE.ShapeGeometry(shape);
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+const textureLoader2 = new THREE.TextureLoader();
+const betonTexture = textureLoader2.load('art/beton.jpg');
+betonTexture.wrapS = THREE.RepeatWrapping;
+betonTexture.wrapT = THREE.RepeatWrapping;
+betonTexture.repeat.set(4, 4);
+
+
+const floorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
 const floor = new THREE.Mesh(floorGeo, floorMat);
+// fix UV voor ShapeGeometry
+const pos = floorGeo.attributes.position;
+const uvs = [];
+for (let i = 0; i < pos.count; i++) {
+  uvs.push(pos.getX(i) / (radius * 2) + 0.5);
+  uvs.push(pos.getY(i) / (radius * 2) + 0.5);
+}
+floorGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
 // extra vloer om gaten te vullen
 const extraFloor = new THREE.Mesh(
   new THREE.CircleGeometry(28, 64),
-  new THREE.MeshStandardMaterial({ color: 0x8B7355 })
+  new THREE.MeshStandardMaterial({ map: betonTexture })
 );
 extraFloor.rotation.x = -Math.PI / 2;
 extraFloor.position.y = -0.01;
@@ -128,7 +143,7 @@ scene.add(ceiling);
 
 // ---- ENTREE GANG ----
 const gangMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
-const gangFloorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+const gangFloorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
 
 const gangFloor = new THREE.Mesh(new THREE.PlaneGeometry(6, 10), gangFloorMat);
 gangFloor.rotation.x = -Math.PI / 2;
@@ -162,12 +177,12 @@ gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
 
 // ---- ART ROOMS ----
-const roomDepth = 12;
+const roomDepth = 10;
 const roomWidth = 12;
 const roomPositions = [];
 const doors = [];
 const roomWallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
-const roomFloorMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+const roomFloorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
 const roomCeilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });
 
 for (let i = 0; i < sides; i++) {
@@ -324,7 +339,7 @@ function updateMovement() {
 function isAllowed(x, z) {
   const inGang = x > -3 && x < 3 && z > 10 && z < 22;
   const inHal = insidePentagon(x, z);
-  const inRoom = roomPositions.some(r => Math.abs(x - r.rx) < 6 && Math.abs(z - r.rz) < 6);
+  const inRoom = roomPositions.some(r => Math.abs(x - r.rx) < 7 && Math.abs(z - r.rz) < 7);
   return inGang || inHal || inRoom;
 }
 
@@ -359,3 +374,6 @@ animate();
 
 console.log('roomPositions:', roomPositions);
 console.log('doors:', doors);
+console.log('muur cx/cz:', cx, cz);
+console.log('kamer rx/rz:', rx, rz);
+console.log('nx/nz:', nx, nz);

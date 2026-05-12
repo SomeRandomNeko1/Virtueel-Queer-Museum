@@ -12,6 +12,18 @@ scene.background = new THREE.Color(0x1a1a1a);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 1.9, 17);
 
+// ---- AUDIO ----
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+const sound = new THREE.Audio(listener);
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('audio/sound.mp3', buffer => {
+  sound.setBuffer(buffer);
+  sound.setLoop(false);
+  sound.setVolume(0.5);
+});
+
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -23,23 +35,20 @@ window.addEventListener('resize', () => {
 const ambientLight = new THREE.AmbientLight(0xfff5e0, 0.3);
 scene.add(ambientLight);
 
-// hoofdlamp hal
 const halLamp = new THREE.PointLight(0xffd27f, 1.5, 30);
 halLamp.position.set(0, 4.8, 0);
 scene.add(halLamp);
 
-// lamp geometry — zichtbare lamp
 const lampGeo = new THREE.SphereGeometry(0.15, 16, 16);
-const lampMat = new THREE.MeshStandardMaterial({ 
-  color: 0xffd27f, 
-  emissive: 0xffd27f, 
-  emissiveIntensity: 2 
+const lampMat = new THREE.MeshStandardMaterial({
+  color: 0xffd27f,
+  emissive: 0xffd27f,
+  emissiveIntensity: 2
 });
 const lampMesh = new THREE.Mesh(lampGeo, lampMat);
 lampMesh.position.set(0, 4.8, 0);
 scene.add(lampMesh);
 
-// gang lamp
 const gangLamp = new THREE.PointLight(0xffd27f, 0.8, 15);
 gangLamp.position.set(0, 4.8, 17);
 scene.add(gangLamp);
@@ -47,6 +56,14 @@ scene.add(gangLamp);
 const gangLampMesh = new THREE.Mesh(lampGeo, lampMat);
 gangLampMesh.position.set(0, 4.8, 17);
 scene.add(gangLampMesh);
+
+// ---- TEXTURES ----
+const textureLoader = new THREE.TextureLoader();
+
+const betonTexture = textureLoader.load('art/beton.jpg');
+betonTexture.wrapS = THREE.RepeatWrapping;
+betonTexture.wrapT = THREE.RepeatWrapping;
+betonTexture.repeat.set(4, 4);
 
 // ---- PENTAGON VLOER ----
 const shape = new THREE.Shape();
@@ -62,16 +79,6 @@ for (let i = 0; i < sides; i++) {
 }
 
 const floorGeo = new THREE.ShapeGeometry(shape);
-const textureLoader2 = new THREE.TextureLoader();
-const betonTexture = textureLoader2.load('art/beton.jpg');
-betonTexture.wrapS = THREE.RepeatWrapping;
-betonTexture.wrapT = THREE.RepeatWrapping;
-betonTexture.repeat.set(4, 4);
-
-
-const floorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
-const floor = new THREE.Mesh(floorGeo, floorMat);
-// fix UV voor ShapeGeometry
 const pos = floorGeo.attributes.position;
 const uvs = [];
 for (let i = 0; i < pos.count; i++) {
@@ -79,10 +86,12 @@ for (let i = 0; i < pos.count; i++) {
   uvs.push(pos.getY(i) / (radius * 2) + 0.5);
 }
 floorGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+const floorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
+const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
-// extra vloer om gaten te vullen
 const extraFloor = new THREE.Mesh(
   new THREE.CircleGeometry(28, 64),
   new THREE.MeshStandardMaterial({ map: betonTexture })
@@ -131,27 +140,27 @@ for (let i = 0; i < sides; i++) {
     topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
     topWall.rotation.y = wallAngle;
     scene.add(topWall);
-  } else if (i !== 2) {
-  const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
-  const leftWall = new THREE.Mesh(leftGeo, wallMat);
-  leftWall.position.set(cx, wallHeight / 2, cz);
-  leftWall.rotation.y = wallAngle;
-  leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
-  scene.add(leftWall);
+  } else {
+    const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+    const leftWall = new THREE.Mesh(leftGeo, wallMat);
+    leftWall.position.set(cx, wallHeight / 2, cz);
+    leftWall.rotation.y = wallAngle;
+    leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
+    scene.add(leftWall);
 
-  const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
-  const rightWall = new THREE.Mesh(rightGeo, wallMat);
-  rightWall.position.set(cx, wallHeight / 2, cz);
-  rightWall.rotation.y = wallAngle;
-  rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
-  scene.add(rightWall);
+    const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+    const rightWall = new THREE.Mesh(rightGeo, wallMat);
+    rightWall.position.set(cx, wallHeight / 2, cz);
+    rightWall.rotation.y = wallAngle;
+    rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
+    scene.add(rightWall);
 
-  const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
-  const topWall = new THREE.Mesh(topGeo, wallMat);
-  topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
-  topWall.rotation.y = wallAngle;
-  scene.add(topWall);
-}
+    const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
+    const topWall = new THREE.Mesh(topGeo, wallMat);
+    topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
+    topWall.rotation.y = wallAngle;
+    scene.add(topWall);
+  }
 }
 
 // ---- PLAFOND ----
@@ -161,24 +170,23 @@ const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
 ceiling.rotation.x = Math.PI / 2;
 ceiling.position.y = wallHeight;
 scene.add(ceiling);
+
 // ---- BALIE ----
 const balieMat = new THREE.MeshStandardMaterial({ color: 0x5c3d1e, side: THREE.DoubleSide });
 
-// ronde balie wand — open aan achterkant
 const balieWand = new THREE.Mesh(
   new THREE.CylinderGeometry(2, 2, 1.1, 32, 1, true, 0, Math.PI * 1.5),
   balieMat
 );
 balieWand.position.set(0, 0.55, 0);
+balieWand.rotation.y = Math.PI / -1.5;
 scene.add(balieWand);
 
-// balie blad
 const balieTop = new THREE.Mesh(
   new THREE.CylinderGeometry(2.2, 2.2, 0.1, 32, 1, false, 0, Math.PI * 1.5),
   balieMat
 );
 balieTop.position.set(0, 1.1, 0);
-balieWand.rotation.y = Math.PI / -1.5;
 balieTop.rotation.y = Math.PI / -1.5;
 scene.add(balieTop);
 
@@ -283,6 +291,8 @@ for (let i = 0; i < sides; i++) {
 }
 
 // ---- SCHILDERIJEN ----
+const kunstwerken = [];
+
 roomPositions.forEach((kamer, i) => {
   const angle = doors[i].wallAngle;
   const wx = Math.sin(angle);
@@ -290,7 +300,6 @@ roomPositions.forEach((kamer, i) => {
   const px = Math.cos(angle);
   const pz = -Math.sin(angle);
 
-  // achtermuur — 3 schilderijen
   [-2.5, 0, 2.5].forEach(offset => {
     const kunst = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 1.5),
@@ -303,9 +312,9 @@ roomPositions.forEach((kamer, i) => {
     );
     kunst.rotation.y = angle;
     scene.add(kunst);
+    kunstwerken.push({ mesh: kunst, angle });
   });
 
-  // linker zijmuur — 3 schilderijen
   [-2.5, 0, 2.5].forEach(offset => {
     const kunst = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 1.5),
@@ -318,9 +327,9 @@ roomPositions.forEach((kamer, i) => {
     );
     kunst.rotation.y = angle - Math.PI / 2;
     scene.add(kunst);
+    kunstwerken.push({ mesh: kunst, angle: angle - Math.PI / 2 });
   });
 
-  // rechter zijmuur — 3 schilderijen
   [-2.5, 0, 2.5].forEach(offset => {
     const kunst = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 1.5),
@@ -333,7 +342,25 @@ roomPositions.forEach((kamer, i) => {
     );
     kunst.rotation.y = angle + Math.PI / 2;
     scene.add(kunst);
+    kunstwerken.push({ mesh: kunst, angle: angle + Math.PI / 2 });
   });
+});
+
+// ---- AUDIO KNOPPEN ----
+const audioButtons = [];
+
+kunstwerken.forEach(k => {
+  const btn = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+  );
+  btn.position.copy(k.mesh.position);
+  btn.rotation.copy(k.mesh.rotation);
+  btn.translateY(-1.0);
+  btn.translateX(0.9);
+  btn.translateZ(0.05);
+  scene.add(btn);
+  audioButtons.push({ button: btn, isPlaying: false });
 });
 
 // ---- SPOTLIGHTS OP SCHILDERIJEN ----
@@ -344,13 +371,12 @@ roomPositions.forEach((kamer, i) => {
   const px = Math.cos(angle);
   const pz = -Math.sin(angle);
 
-  const spotMat = new THREE.MeshStandardMaterial({ 
-    color: 0xffffff, 
-    emissive: 0xffffff, 
-    emissiveIntensity: 2 
+  const spotMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 2
   });
 
-  // achtermuur spots
   [-2.5, 0, 2.5].forEach(offset => {
     const spot = new THREE.SpotLight(0xfff5e0, 1.5, 8, Math.PI / 8, 0.3);
     spot.position.set(
@@ -370,7 +396,6 @@ roomPositions.forEach((kamer, i) => {
     scene.add(spotMesh);
   });
 
-  // linker zijmuur spots
   [-2.5, 0, 2.5].forEach(offset => {
     const spot = new THREE.SpotLight(0xfff5e0, 1.5, 8, Math.PI / 8, 0.3);
     spot.position.set(
@@ -390,7 +415,6 @@ roomPositions.forEach((kamer, i) => {
     scene.add(spotMesh);
   });
 
-  // rechter zijmuur spots
   [-2.5, 0, 2.5].forEach(offset => {
     const spot = new THREE.SpotLight(0xfff5e0, 1.5, 8, Math.PI / 8, 0.3);
     spot.position.set(
@@ -427,6 +451,41 @@ document.addEventListener('mousemove', e => {
     yaw -= e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
     pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+  }
+});
+
+// ---- AUDIO CLICK ----
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let currentPlaying = null;
+
+window.addEventListener('click', () => {
+  mouse.x = 0;
+  mouse.y = 0;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const hits = raycaster.intersectObjects(audioButtons.map(b => b.button));
+  if (!hits.length || !sound.buffer) return;
+
+  const btn = audioButtons.find(b => b.button === hits[0].object);
+  if (!btn) return;
+
+  if (btn.isPlaying) {
+    sound.stop();
+    btn.isPlaying = false;
+    btn.button.material.color.set(0x00ff00);
+    currentPlaying = null;
+  } else {
+    if (currentPlaying && currentPlaying !== btn) {
+      sound.stop();
+      currentPlaying.isPlaying = false;
+      currentPlaying.button.material.color.set(0x00ff00);
+    }
+    sound.play();
+    btn.isPlaying = true;
+    btn.button.material.color.set(0xff0000);
+    currentPlaying = btn;
   }
 });
 
@@ -487,11 +546,3 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
-
-console.log('roomPositions:', roomPositions);
-console.log('doors:', doors);
-console.log('muur cx/cz:', cx, cz);
-console.log('kamer rx/rz:', rx, rz);
-console.log('nx/nz:', nx, nz);
-
-

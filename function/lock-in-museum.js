@@ -1,20 +1,20 @@
-renderer.domElement.addEventListener('click', (event) => {
-  if (activePaintingUrl) return;
+function setupPointerLockAndPicking(renderer, isPaintingOpen, pickPainting, onLookDelta) {
+  renderer.domElement.addEventListener('click', (event) => {
+    if (isPaintingOpen()) return;
 
-  if (document.pointerLockElement === renderer.domElement) {
-    if (pickPainting(0, 0)) return;
-  } else {
-    const normalizedX = (event.clientX / window.innerWidth) * 2 - 1;
-    const normalizedY = -(event.clientY / window.innerHeight) * 2 + 1;
-    if (pickPainting(normalizedX, normalizedY)) return;
-  }
+    if (document.pointerLockElement === renderer.domElement) {
+      if (pickPainting(0, 0)) return;
+    } else {
+      const normalizedX = (event.clientX / window.innerWidth) * 2 - 1;
+      const normalizedY = -(event.clientY / window.innerHeight) * 2 + 1;
+      if (pickPainting(normalizedX, normalizedY)) return;
+    }
 
-  renderer.domElement.requestPointerLock();
-});
+    renderer.domElement.requestPointerLock();
+  });
 
-window.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement !== renderer.domElement) return;
-  yaw   -= e.movementX * 0.002;
-  pitch -= e.movementY * 0.002;
-  pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
-});
+  window.addEventListener('mousemove', (event) => {
+    if (document.pointerLockElement !== renderer.domElement) return;
+    onLookDelta(event.movementX, event.movementY);
+  });
+}

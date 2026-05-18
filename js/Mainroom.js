@@ -655,7 +655,8 @@ helpKnop.onclick = function(e) {
 let museumGestart = false;
 
 document.addEventListener('pointerlockchange', function() {
-  if (document.pointerLockElement === null && !isMobiel && museumGestart) {
+  const popupOpen = document.querySelector('#kaart') !== null;
+  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) {
     toonGids();
   }
 });

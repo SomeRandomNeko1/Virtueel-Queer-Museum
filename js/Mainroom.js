@@ -191,7 +191,7 @@ balieTop.rotation.y = Math.PI / -1.5;
 scene.add(balieTop);
 
 // ---- ENTREE GANG ----
-const gangMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
+const gangMat = new THREE.MeshStandardMaterial({ color: 0x622B14, side: THREE.DoubleSide });
 const gangFloorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
 
 const gangFloor = new THREE.Mesh(new THREE.PlaneGeometry(6, 10), gangFloorMat);
@@ -221,7 +221,7 @@ const gangBack = new THREE.Mesh(new THREE.PlaneGeometry(6, wallHeight), gangMat)
 gangBack.position.set(0, wallHeight / 2, 22);
 scene.add(gangBack);
 
-const gangLight = new THREE.PointLight(0xffffff, 0.8);
+const gangLight = new THREE.PointLight(0x622B14, 0.8);
 gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
 
@@ -230,7 +230,7 @@ const roomDepth = 10;
 const roomWidth = 12;
 const roomPositions = [];
 const doors = [];
-const roomWallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
+const roomWallMat = new THREE.MeshStandardMaterial({ color: 0x995F2F, side: THREE.DoubleSide });
 const roomFloorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
 const roomCeilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });
 

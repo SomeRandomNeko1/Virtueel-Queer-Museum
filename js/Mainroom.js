@@ -617,7 +617,7 @@ helpKnop.style.cssText = "position:fixed; bottom:20px; right:20px; width:40px; h
 document.body.appendChild(helpKnop);
 
 const infoScherm = document.createElement('div');
-infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.7); color:white; display:flex; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif; cursor:pointer;";
+infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.7); color:white; display:none; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif; cursor:pointer;";
 
 const isMobiel = "ontouchstart" in window;
 
@@ -652,8 +652,10 @@ helpKnop.onclick = function(e) {
   toonGids();
 };
 
+let museumGestart = false;
+
 document.addEventListener('pointerlockchange', function() {
-  if (document.pointerLockElement === null && !isMobiel) {
+  if (document.pointerLockElement === null && !isMobiel && museumGestart) {
     toonGids();
   }
 });

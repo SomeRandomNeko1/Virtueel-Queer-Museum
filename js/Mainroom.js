@@ -61,9 +61,14 @@ scene.add(gangLampMesh);
 const textureLoader = new THREE.TextureLoader();
 
 const betonTexture = textureLoader.load('art/beton.jpg');
+
+const deurTexture = textureLoader.load('art/Deur.png');
 betonTexture.wrapS = THREE.RepeatWrapping;
 betonTexture.wrapT = THREE.RepeatWrapping;
 betonTexture.repeat.set(4, 4);
+deurTexture.colorSpace = THREE.SRGBColorSpace;
+deurTexture.wrapS = THREE.ClampToEdgeWrapping;
+deurTexture.wrapT = THREE.ClampToEdgeWrapping;
 
 // ---- PENTAGON VLOER ----
 const shape = new THREE.Shape();
@@ -273,6 +278,33 @@ scene.add(gangBack);
 const gangLight = new THREE.PointLight(0x622B14, 0.8);
 gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
+
+// ---- DEUR (OPEN/DICHT) ----
+const deurPivot = new THREE.Group();
+deurPivot.position.set(0, 0, 17); // midden gang ingang
+
+const deur = new THREE.Mesh(
+  new THREE.BoxGeometry(1.51, 3, 0.12),
+new THREE.MeshStandardMaterial({
+  map: deurTexture,
+  roughness: 0.9,
+  metalness: 0.0,
+  color: new THREE.Color(0.6, 0.6, 0.6) // <<< dempt de brightness
+})
+);
+const deur2 = deur.clone();
+const deurPivot2 = new THREE.Group();
+
+deurPivot2.position.set(3.5, 0, 17); // iets naast de originele deur
+deur2.position.set(-2.76, 1.5, -4.85);
+
+deurPivot2.add(deur2);
+scene.add(deurPivot2);
+
+deur.position.set(-0.76, 1.5, -4.85);
+
+deurPivot.add(deur);
+scene.add(deurPivot);
 
 // ---- ART ROOMS ----
 const roomDepth = 10;

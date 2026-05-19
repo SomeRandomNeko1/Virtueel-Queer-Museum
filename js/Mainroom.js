@@ -100,11 +100,21 @@ extraFloor.rotation.x = -Math.PI / 2;
 extraFloor.position.y = -0.01;
 scene.add(extraFloor);
 
-// ---- MUREN ----
+// ---- MUREN & POSTERS (VEILIGE VERSIE) ----
 const wallHeight = 5;
 const doorHeight = 3;
 const openingWidth = 3;
 const wallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
+
+// ZORGEN DAT DE LOADER BESTAAT:
+const loader = new THREE.TextureLoader();
+
+// Hier definieer je de afbeeldingen. 
+// TIP: Verander 'image3.jpg' naar een afbeelding die écht in je map staat!
+const sideWallImages = [
+  { img: 'art/image3.jpg', targetWallIndex: 1, side: 'left',  },  // Rood als afbeelding mist
+  { img: 'art/image4.jpg', targetWallIndex: 3, side: 'right',  }  // Blauw als afbeelding mist
+];
 
 for (let i = 0; i < sides; i++) {
   const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
@@ -120,6 +130,7 @@ for (let i = 0; i < sides; i++) {
   const cz = (z1 + z2) / 2;
   const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
 
+  // --- Jouw originele muren-code ---
   if (i === 2) {
     const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
     const leftWall = new THREE.Mesh(leftGeo, wallMat);
@@ -161,8 +172,45 @@ for (let i = 0; i < sides; i++) {
     topWall.rotation.y = wallAngle;
     scene.add(topWall);
   }
-}
 
+  // --- Veilige Poster Sectie ---
+  const posterData = sideWallImages.find(item => item.targetWallIndex === i);
+
+  if (posterData) {
+    const posterWidth = 3.5;
+    const posterHeight = 3.5;
+    const posterGeo = new THREE.PlaneGeometry(posterWidth, posterHeight);
+    
+    // We maken een basismateriaal aan met een opvallende kleur voor als het laden mislukt
+    const posterMat = new THREE.MeshStandardMaterial({ 
+      color: posterData.fallbackColor,
+      side: THREE.DoubleSide 
+    });
+
+    // Probeer hier de afbeelding te laden. Als dit lukt, overschrijft hij de kleur.
+    loader.load(
+      posterData.img, 
+      (texture) => { posterMat.map = texture; posterMat.needsUpdate = true; },
+      undefined,
+      (err) => { console.warn("Kon afbeelding niet laden, ik gebruik de gekleurde placeholder: ", posterData.img); }
+    );
+
+    const poster = new THREE.Mesh(posterGeo, posterMat);
+
+    // Positionering
+    poster.position.set(cx, wallHeight / 2, cz);
+    poster.rotation.y = wallAngle;
+
+    if (posterData.side === 'left') {
+      poster.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
+    } else if (posterData.side === 'right') {
+      poster.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
+    }
+
+    poster.translateZ(0.02);
+    scene.add(poster);
+  }
+}
 // ---- PLAFOND ----
 const ceilGeo = new THREE.ShapeGeometry(shape);
 const ceilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });

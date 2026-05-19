@@ -411,6 +411,7 @@ kunstwerken.forEach(k => {
   audioButtons.push({ button: btn, isPlaying: false });
 });
 
+
 // ---- TEXT POPUPS ----
 const infoData = [
   { titel: "Identiteit", tekst: "Dit werk verkent gender en zelfexpressie binnen de queer gemeenschap." },
@@ -418,12 +419,10 @@ const infoData = [
   { titel: "Toekomst", tekst: "Samen bouwen we aan een inclusieve wereld." }
 ];
 
-// koppel info aan kunstwerken
 kunstwerken.forEach((k, i) => {
   k.mesh.userData = infoData[i % infoData.length];
 });
 
-// klik detectie voor popups
 window.addEventListener('mousedown', () => {
   if (document.pointerLockElement !== canvas) return;
 
@@ -444,30 +443,26 @@ function toonInfo(data) {
   overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
 
   overlay.innerHTML = `
-    <div id="kaart" style="background:white; padding:25px; width:260px; border-radius:15px; text-align:center; font-family:sans-serif;">
-      <h2 style="color:#aa1eaa; margin:0 0 10px 0;">${data.titel}</h2>
-      <p id="tekst" style="display:none; line-height:1.5; color:#333;">${data.tekst}</p>
-      <button id="knop" style="margin-top:15px; padding:10px 20px; background:#ff85aa; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Lees meer</button>
+    <div id="kaart" style="background:white; padding:30px; width:600px; border-radius:10px; display:flex; gap:20px; font-family:sans-serif;">
+      <div style="flex:1;">
+        <div style="width:100%; aspect-ratio:4/3; background:#eee; border:1px solid #ccc;"></div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <h2 style="color:#aa1eaa; margin:0 0 10px 0;">${data.titel}</h2>
+          <p style="line-height:1.6; color:#333;">${data.tekst}</p>
+        </div>
+        <button id="knop" style="padding:10px 20px; background:white; color:black; border:1px solid black; border-radius:4px; cursor:pointer; align-self:flex-end;">Terug</button>
+      </div>
     </div>`;
 
   document.body.appendChild(overlay);
 
-  const knop = overlay.querySelector('#knop');
-  const kaart = overlay.querySelector('#kaart');
-  const tekst = overlay.querySelector('#tekst');
-
-  knop.onclick = () => {
-    if (knop.innerText === "Lees meer") {
-      tekst.style.display = "block";
-      kaart.style.width = "350px";
-      knop.innerText = "Sluiten";
-    } else {
-      overlay.remove();
-      canvas.requestPointerLock();
-    }
+  overlay.querySelector('#knop').onclick = () => {
+    overlay.remove();
+    canvas.requestPointerLock();
   };
 }
-
 
 // ---- SPOTLIGHTS OP SCHILDERIJEN ----
 roomPositions.forEach((kamer, i) => {
@@ -542,8 +537,7 @@ roomPositions.forEach((kamer, i) => {
 });
 
 // ---- CONTROLS ----
-let yaw = 0;
-let pitch = 0;
+const look = { yaw: 0, pitch: 0 };
 const speed = 0.05;
 let keys = {};
 
@@ -554,9 +548,9 @@ canvas.addEventListener('click', () => canvas.requestPointerLock());
 
 document.addEventListener('mousemove', e => {
   if (document.pointerLockElement === canvas) {
-    yaw -= e.movementX * 0.002;
-    pitch -= e.movementY * 0.002;
-    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+    look.yaw -= e.movementX * 0.002;
+    look.pitch -= e.movementY * 0.002;
+    look.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, look.pitch));
   }
 });
 
@@ -567,7 +561,6 @@ function setupZoom(camera, minFov = 30, maxFov = 100, sensitivity = 0.01) {
     camera.updateProjectionMatrix();
   });
 }
-
 setupZoom(camera);
 
 // ---- AUDIO CLICK ----
@@ -578,15 +571,11 @@ let currentPlaying = null;
 window.addEventListener('click', () => {
   mouse.x = 0;
   mouse.y = 0;
-
   raycaster.setFromCamera(mouse, camera);
-
   const hits = raycaster.intersectObjects(audioButtons.map(b => b.button));
   if (!hits.length || !sound.buffer) return;
-
   const btn = audioButtons.find(b => b.button === hits[0].object);
   if (!btn) return;
-
   if (btn.isPlaying) {
     sound.stop();
     btn.isPlaying = false;
@@ -607,8 +596,8 @@ window.addEventListener('click', () => {
 
 // ---- MOVEMENT ----
 function updateMovement() {
-  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-  const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+  const forward = new THREE.Vector3(-Math.sin(look.yaw), 0, -Math.cos(look.yaw));
+  const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
 
   const next = camera.position.clone();
 
@@ -623,8 +612,8 @@ function updateMovement() {
   }
 
   camera.rotation.order = 'YXZ';
-  camera.rotation.y = yaw;
-  camera.rotation.x = pitch;
+  camera.rotation.y = look.yaw;
+  camera.rotation.x = look.pitch;
 }
 
 function isAllowed(x, z) {
@@ -637,26 +626,19 @@ function isAllowed(x, z) {
 function insidePentagon(x, z) {
   for (let i = 0; i < sides; i++) {
     if (i === 2) continue;
-
     const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
     const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
-
     const x1 = Math.cos(angle1) * radius;
     const z1 = Math.sin(angle1) * radius;
     const x2 = Math.cos(angle2) * radius;
     const z2 = Math.sin(angle2) * radius;
-
     const nx = -(z2 - z1);
     const nz = x2 - x1;
-
     const dot = (x - x1) * nx + (z - z1) * nz;
     if (dot < 0.3) return false;
   }
   return true;
 }
-
-
-
 
 // ---- HELP KNOP & INSTRUCTIES ----
 const helpKnop = document.createElement('div');
@@ -709,10 +691,78 @@ document.addEventListener('pointerlockchange', function() {
   }
 });
 
+// ---- JOYSTICK ----
+function initJoystick({ camera, joystickEl, isMobile }) {
+  const jKeys = { w: false, a: false, s: false, d: false };
+  const move = { x: 0, y: 0 };
+  let joystick = null;
+
+  if (isMobile && window.nipplejs && joystickEl) {
+    joystick = nipplejs.create({
+      zone: joystickEl,
+      mode: 'static',
+      position: { left: '50px', bottom: '50px' },
+      color: 'white',
+      size: Math.min(innerWidth, innerHeight) * 0.15
+    });
+
+    joystick.on('move', (_, data) => {
+      if (!data) return;
+      move.x = data.vector.x;
+      move.y = -data.vector.y;
+    });
+
+    joystick.on('end', () => {
+      move.x = 0;
+      move.y = 0;
+    });
+  } else if (joystickEl) {
+    joystickEl.style.display = 'none';
+  }
+
+  function update() {
+    const spd = 0.05;
+    let moveX = move.x;
+    let moveZ = move.y;
+
+    const len = Math.hypot(moveX, moveZ);
+    if (len > 0) {
+      moveX /= len;
+      moveZ /= len;
+    }
+
+    const forward = new THREE.Vector3(Math.sin(look.yaw), 0, Math.cos(look.yaw));
+    const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
+
+    const next = camera.position.clone();
+    next.add(forward.multiplyScalar(moveZ * spd));
+    next.add(right.multiplyScalar(moveX * spd));
+
+    if (isAllowed(next.x, next.z)) {
+      camera.position.x = next.x;
+      camera.position.z = next.z;
+    }
+  }
+
+  function resize() {
+    if (joystick) {
+      joystick.options.size = Math.min(innerWidth, innerHeight) * 0.15;
+    }
+  }
+
+  return { update, resize };
+}
+
+const isMobile = window.innerWidth <= 720;
+const joystickEl = document.getElementById('joystick-zone');
+const joystickControls = initJoystick({ camera, joystickEl, isMobile });
+window.addEventListener('resize', joystickControls.resize);
+
 // ---- ANIMATIE LOOP ----
 function animate() {
   requestAnimationFrame(animate);
   updateMovement();
+  joystickControls.update();
   renderer.render(scene, camera);
 }
 animate();

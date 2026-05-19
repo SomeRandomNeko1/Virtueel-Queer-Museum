@@ -211,6 +211,7 @@ for (let i = 0; i < sides; i++) {
     scene.add(poster);
   }
 }
+
 // ---- PLAFOND ----
 const ceilGeo = new THREE.ShapeGeometry(shape);
 const ceilMat = new THREE.MeshStandardMaterial({ color: 0xF0EAD6 });

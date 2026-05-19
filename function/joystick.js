@@ -69,7 +69,7 @@
     window.addEventListener('mousemove', e => {
         if (!dragging) return;
 
-        const p = pos(e);
+        const p = pos(e);  
 
         const dx = p.x - prevX;
         const dy = p.y - prevY;

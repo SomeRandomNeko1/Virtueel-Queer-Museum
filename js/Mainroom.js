@@ -340,6 +340,24 @@ new THREE.MeshStandardMaterial({
 const deur2 = deur.clone();
 const deurPivot2 = new THREE.Group();
 
+// Schuifdeur railing
+const bovenDeurMat = new THREE.MeshStandardMaterial({
+  color: 0x000000,
+  roughness: 0.8,
+  metalness: 0.2
+});
+
+const bovenDeurCylinder = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.08, 0.08, 5.8, 32), 
+  bovenDeurMat
+);
+
+bovenDeurCylinder.position.set(0, 3.0, 12.15);
+
+bovenDeurCylinder.rotation.z = Math.PI / 2;
+
+scene.add(bovenDeurCylinder);
+
 deurPivot2.position.set(0, 0, 17); // iets naast de originele deur
 deur2.position.set(0.75, 1.5, -4.85);
 

@@ -279,6 +279,51 @@ const gangLight = new THREE.PointLight(0x622B14, 0.8);
 gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
 
+// === LINKERMUUR POSTERS (X = -2.99) ===
+
+// Poster links 1 (Vooraan in de gang)
+const leftPosterTex1 = loader.load('art/image7.jpg'); 
+const leftPoster1 = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 3), 
+    new THREE.MeshStandardMaterial({ map: leftPosterTex1, side: THREE.DoubleSide })
+);
+leftPoster1.rotation.y = Math.PI / 2;
+leftPoster1.position.set(-2.99, wallHeight / 2, 14); // Z = 14
+scene.add(leftPoster1);
+
+// Poster links 2 (Verderop in de gang)
+const leftPosterTex2 = loader.load('art/image8.jpg'); 
+const leftPoster2 = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 3), 
+    new THREE.MeshStandardMaterial({ map: leftPosterTex2, side: THREE.DoubleSide })
+);
+leftPoster2.rotation.y = Math.PI / 2;
+leftPoster2.position.set(-2.99, wallHeight / 2, 19); // Z = 19
+scene.add(leftPoster2);
+
+
+// === RECHTERMUUR POSTERS (X = 2.99) ===
+
+// Poster rechts 1 (Tussen de twee linkerposters in)
+const rightPosterTex1 = loader.load('art/image5.jpg'); // Je kunt dit veranderen naar een eigen bestand, bijv. image7.jpg
+const rightPoster1 = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 3), 
+    new THREE.MeshStandardMaterial({ map: rightPosterTex1, side: THREE.DoubleSide })
+);
+rightPoster1.rotation.y = -Math.PI / 2;
+rightPoster1.position.set(2.99, wallHeight / 2, 16.5); // Z = 16.5
+scene.add(rightPoster1);
+
+// Poster rechts 2 (Helemaal achteraan bij het einde van de gang)
+const rightPosterTex2 = loader.load('art/image6.jpg'); // Je kunt dit veranderen naar een eigen bestand, bijv. image8.jpg
+const rightPoster2 = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 3), 
+    new THREE.MeshStandardMaterial({ map: rightPosterTex2, side: THREE.DoubleSide })
+);
+rightPoster2.rotation.y = -Math.PI / 2;
+rightPoster2.position.set(2.99, wallHeight / 2, 20.5); // Z = 21.5
+scene.add(rightPoster2);
+
 // ---- DEUR (OPEN/DICHT) ----
 const deurPivot = new THREE.Group();
 deurPivot.position.set(0, 0, 17); // midden gang ingang

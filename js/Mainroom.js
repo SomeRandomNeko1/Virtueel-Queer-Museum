@@ -627,6 +627,8 @@ window.addEventListener('click', () => {
   }
 });
 
+
+
 // ---- MOVEMENT ----
 function updateMovement() {
   const forward = new THREE.Vector3(-Math.sin(look.yaw), 0, -Math.cos(look.yaw));

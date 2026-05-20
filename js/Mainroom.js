@@ -340,8 +340,8 @@ new THREE.MeshStandardMaterial({
 const deur2 = deur.clone();
 const deurPivot2 = new THREE.Group();
 
-deurPivot2.position.set(3.5, 0, 17); // iets naast de originele deur
-deur2.position.set(-2.76, 1.5, -4.85);
+deurPivot2.position.set(0, 0, 17); // iets naast de originele deur
+deur2.position.set(0.75, 1.5, -4.85);
 
 deurPivot2.add(deur2);
 scene.add(deurPivot2);
@@ -350,6 +350,130 @@ deur.position.set(-0.76, 1.5, -4.85);
 
 deurPivot.add(deur);
 scene.add(deurPivot);
+
+// Deur animatie 
+let doorsOpen = false;
+let animatingDoors = false;
+let autoCloseTimeout = null;
+
+const DOOR_DURATION = 2000;
+
+let doorProgress = 0; // 0 = dicht, 1 = open
+let doorTarget = 0;
+let doorAnimating = false;
+let lastTime = null;
+
+const doorAnimation = {
+  leftClosed: -0.76,
+  leftOpen: -2.1,
+  rightClosed: 0.75,
+  rightOpen: 2.1
+};
+
+function easeInOut(t) {
+  return t < 0.5
+    ? 2 * t * t
+    : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+let pendingDoorState = null; // true = open, false = dicht
+
+function animateDoors(open) {
+  if (animatingDoors) return;
+  animatingDoors = true;
+
+  const start = performance.now();
+
+  function loop(now) {
+    const t = Math.min((now - start) / DOOR_DURATION, 1);
+    const e = easeInOut(t);
+
+    deur.position.x = open
+      ? THREE.MathUtils.lerp(doorAnimation.leftClosed, doorAnimation.leftOpen, e)
+      : THREE.MathUtils.lerp(doorAnimation.leftOpen, doorAnimation.leftClosed, e);
+
+    deur2.position.x = open
+      ? THREE.MathUtils.lerp(doorAnimation.rightClosed, doorAnimation.rightOpen, e)
+      : THREE.MathUtils.lerp(doorAnimation.rightOpen, doorAnimation.rightClosed, e);
+
+    if (t < 1) {
+      requestAnimationFrame(loop);
+    } else {
+      doorsOpen = open;
+      animatingDoors = false;
+
+      // 👇 BELANGRIJK: check of er nog een actie wacht
+      if (pendingDoorState !== null) {
+        const next = pendingDoorState;
+        pendingDoorState = null;
+        animateDoors(next);
+      }
+    }
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// Touch zone
+const buttonGeo = new THREE.CylinderGeometry(0.6, 0.4, 0.1, 32);
+
+const touchZone1 = new THREE.Mesh(
+  buttonGeo,
+  new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    depthWrite: false
+  })
+);
+
+// positie van de touchzone 
+touchZone1.position.set(0, 0.05, 12);
+
+scene.add(touchZone1);
+
+// deur trigger
+function triggerDoors(open) {
+  // Als er al een animatie loopt → onthoud laatste verzoek
+  if (animatingDoors) {
+    pendingDoorState = open;
+    return;
+  }
+
+  animateDoors(open);
+}
+
+const touchRadius = 5; // Touchzone radius
+
+
+let isInTouchZone = false;
+
+function checkTouchZones() {
+  const camPos = camera.position;
+  const zones = [touchZone1];
+
+  let currentlyInZone = false;
+
+  for (let i = 0; i < zones.length; i++) {
+    const dist = camPos.distanceTo(zones[i].position);
+
+    if (dist < touchRadius) {
+      currentlyInZone = true;
+      break;
+    }
+  }
+
+  // 👉 BINNEN ZONE = DEUREN OPEN
+  if (currentlyInZone && !isInTouchZone) {
+    triggerDoors(true);
+  }
+
+  // 👉 BUITEN ZONE = DEUREN DICHT
+  if (!currentlyInZone && isInTouchZone) {
+    triggerDoors(false);
+  }
+
+  isInTouchZone = currentlyInZone;
+}
 
 // ---- ART ROOMS ----
 const roomDepth = 10;
@@ -844,5 +968,6 @@ function animate() {
   updateMovement();
   joystickControls.update();
   renderer.render(scene, camera);
+  checkTouchZones();
 }
 animate();

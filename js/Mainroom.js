@@ -614,10 +614,12 @@ roomPositions.forEach((kamer, i) => {
   });
 });
 
-// ---- AUDIO KNOPPEN ----
+// ---- AUDIO KNOPPEN & LEES MEER ----
 const audioButtons = [];
+const leesMeerButtons = [];
 
 kunstwerken.forEach(k => {
+  // audio knop
   const btn = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.05),
     new THREE.MeshStandardMaterial({ color: 0x00ff00 })
@@ -629,6 +631,19 @@ kunstwerken.forEach(k => {
   btn.translateZ(0.05);
   scene.add(btn);
   audioButtons.push({ button: btn, isPlaying: false });
+
+  // lees meer knop
+  const leesBtn = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x0000ff })
+  );
+  leesBtn.position.copy(k.mesh.position);
+  leesBtn.rotation.copy(k.mesh.rotation);
+  leesBtn.translateY(-1.0);
+  leesBtn.translateX(0.5);
+  leesBtn.translateZ(0.05);
+  scene.add(leesBtn);
+  leesMeerButtons.push({ button: leesBtn, data: k.mesh.userData });
 });
 
 
@@ -643,18 +658,7 @@ kunstwerken.forEach((k, i) => {
   k.mesh.userData = infoData[i % infoData.length];
 });
 
-window.addEventListener('mousedown', () => {
-  if (document.pointerLockElement !== canvas) return;
 
-  const popupRaycaster = new THREE.Raycaster();
-  const center = new THREE.Vector2(0, 0);
-  popupRaycaster.setFromCamera(center, camera);
-
-  const hits = popupRaycaster.intersectObjects(kunstwerken.map(k => k.mesh));
-  if (hits.length > 0) {
-    toonInfo(hits[0].object.userData);
-  }
-});
 
 function toonInfo(data) {
   document.exitPointerLock();
@@ -663,7 +667,19 @@ function toonInfo(data) {
   overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
 
   overlay.innerHTML = `
-    <div id="kaart" style="background:white; padding:30px; width:600px; border-radius:10px; display:flex; gap:20px; font-family:sans-serif;">
+    <div id="kaart" style="
+  background:rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border:1px solid rgba(255,255,255,0.15);
+  padding:30px;
+  width:600px;
+  border-radius:10px;
+  display:flex;
+  gap:20px;
+  font-family:sans-serif;
+  color:white;
+">
       <div style="flex:1;">
         <div style="width:100%; aspect-ratio:4/3; background:#eee; border:1px solid #ccc;"></div>
       </div>
@@ -783,34 +799,48 @@ function setupZoom(camera, minFov = 30, maxFov = 100, sensitivity = 0.01) {
 }
 setupZoom(camera);
 
-// ---- AUDIO CLICK ----
+// ---- AUDIO & LEES MEER CLICK ----
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let currentPlaying = null;
 
 window.addEventListener('click', () => {
+  if (document.pointerLockElement !== canvas) return;
+  
   mouse.x = 0;
   mouse.y = 0;
   raycaster.setFromCamera(mouse, camera);
+
+  // audio check
   const hits = raycaster.intersectObjects(audioButtons.map(b => b.button));
-  if (!hits.length || !sound.buffer) return;
-  const btn = audioButtons.find(b => b.button === hits[0].object);
-  if (!btn) return;
-  if (btn.isPlaying) {
-    sound.stop();
-    btn.isPlaying = false;
-    btn.button.material.color.set(0x00ff00);
-    currentPlaying = null;
-  } else {
-    if (currentPlaying && currentPlaying !== btn) {
-      sound.stop();
-      currentPlaying.isPlaying = false;
-      currentPlaying.button.material.color.set(0x00ff00);
+  if (hits.length && sound.buffer) {
+    const btn = audioButtons.find(b => b.button === hits[0].object);
+    if (btn) {
+      if (btn.isPlaying) {
+        sound.stop();
+        btn.isPlaying = false;
+        btn.button.material.color.set(0x00ff00);
+        currentPlaying = null;
+      } else {
+        if (currentPlaying && currentPlaying !== btn) {
+          sound.stop();
+          currentPlaying.isPlaying = false;
+          currentPlaying.button.material.color.set(0x00ff00);
+        }
+        sound.play();
+        btn.isPlaying = true;
+        btn.button.material.color.set(0xff0000);
+        currentPlaying = btn;
+      }
+      return;
     }
-    sound.play();
-    btn.isPlaying = true;
-    btn.button.material.color.set(0xff0000);
-    currentPlaying = btn;
+  }
+
+  // lees meer check
+  const leesMeerHits = raycaster.intersectObjects(leesMeerButtons.map(b => b.button));
+  if (leesMeerHits.length > 0) {
+    const gevonden = leesMeerButtons.find(b => b.button === leesMeerHits[0].object);
+    if (gevonden) toonInfo(gevonden.data);
   }
 });
 
@@ -839,12 +869,54 @@ function updateMovement() {
 }
 
 function isAllowed(x, z) {
-  const inGang = x > -3 && x < 3 && z > 10 && z < 22;
+
+  // ---- GANG ----
+  const inGang =
+    x > -2.9 &&
+    x < 2.9 &&
+    z > 12 &&
+    z < 22;
+
+  // ---- HOOFDHAL ----
   const inHal = insidePentagon(x, z);
-  const inRoom = roomPositions.some(r => Math.abs(x - r.rx) < 7 && Math.abs(z - r.rz) < 7);
+
+  // ---- KAMERS ----
+  let inRoom = false;
+
+  roomPositions.forEach((r, i) => {
+
+    const angle = doors[i].wallAngle;
+
+    // speler relatief aan kamer
+    const dx = x - r.rx;
+    const dz = z - r.rz;
+
+    // roteer naar lokale kamer-space
+    const localX =
+      dx * Math.cos(angle) -
+      dz * Math.sin(angle);
+
+    const localZ =
+      dx * Math.sin(angle) +
+      dz * Math.cos(angle);
+
+    // strakke kamer collision
+    const halfWidth = roomWidth / 2 - 0.4;
+    const halfDepth = roomDepth / 2 + 1.5;
+
+    if (
+      localX > -halfWidth &&
+      localX < halfWidth &&
+      localZ > -halfDepth &&
+      localZ < halfDepth
+    ) {
+      inRoom = true;
+    }
+
+  });
+
   return inGang || inHal || inRoom;
 }
-
 function insidePentagon(x, z) {
   for (let i = 0; i < sides; i++) {
     if (i === 2) continue;

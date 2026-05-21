@@ -985,58 +985,77 @@ document.addEventListener('pointerlockchange', function() {
   }
 });
 
-// ---- JOYSTICK ----
 function initJoystick({ camera, joystickEl, isMobile }) {
-  const jKeys = { w: false, a: false, s: false, d: false };
-  const move = { x: 0, y: 0 };
-  let joystick = null;
 
-  if (isMobile && window.nipplejs && joystickEl) {
-    joystick = nipplejs.create({
-      zone: joystickEl,
-      mode: 'static',
-      position: { left: '50px', bottom: '50px' },
-      color: 'white',
-      size: Math.min(innerWidth, innerHeight) * 0.15
-    });
-
-    joystick.on('move', (_, data) => {
-      if (!data) return;
-      move.x = data.vector.x;
-      move.y = -data.vector.y;
-    });
-
-    joystick.on('end', () => {
-      move.x = 0;
-      move.y = 0;
-    });
-  } else if (joystickEl) {
-    joystickEl.style.display = 'none';
+  if (!joystickEl) {
+    console.error("joystickEl is null");
+    return {
+      update() {},
+      resize() {}
+    };
   }
 
+  const move = { x: 0, y: 0 };
+
+  if (isMobile) {
+  joystickEl.style.display = 'block';
+}
+
+  let joystick = nipplejs.create({
+    zone: joystickEl,
+    mode: 'static',
+    position: {
+      left: '55px',
+      bottom: '55px'
+    },
+    color: 'white',
+    size: 80
+  });
+
+  joystick.on('move', (_, data) => {
+
+    if (!data || !data.vector) return;
+
+    move.x = data.vector.x;
+    move.y = -data.vector.y;
+  });
+
+  joystick.on('end', () => {
+
+    move.x = 0;
+    move.y = 0;
+  });
+
   function update() {
+
     const spd = 0.05;
-    let moveX = move.x;
-    let moveZ = move.y;
 
-    const len = Math.hypot(moveX, moveZ);
-    if (len > 0) {
-      moveX /= len;
-      moveZ /= len;
-    }
+    const forward = new THREE.Vector3(
+      Math.sin(look.yaw),
+      0,
+      Math.cos(look.yaw)
+    );
 
-    const forward = new THREE.Vector3(Math.sin(look.yaw), 0, Math.cos(look.yaw));
-    const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
+    const right = new THREE.Vector3(
+      Math.cos(look.yaw),
+      0,
+      -Math.sin(look.yaw)
+    );
 
     const next = camera.position.clone();
-    next.add(forward.multiplyScalar(moveZ * spd));
-    next.add(right.multiplyScalar(moveX * spd));
+
+    next.add(forward.multiplyScalar(move.y * spd));
+    next.add(right.multiplyScalar(move.x * spd));
 
     if (isAllowed(next.x, next.z)) {
+
       camera.position.x = next.x;
       camera.position.z = next.z;
     }
   }
+
+  return { update };
+}
 
   function resize() {
     if (joystick) {
@@ -1044,13 +1063,22 @@ function initJoystick({ camera, joystickEl, isMobile }) {
     }
   }
 
-  return { update, resize };
+const joystickEl = document.getElementById('joystick-zone');
+
+const isMobile =
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  || ('ontouchstart' in window);
+
+if (!isMobile) {
+  joystickEl.style.display = 'none';
 }
 
-const isMobile = window.innerWidth <= 720;
-const joystickEl = document.getElementById('joystick-zone');
-const joystickControls = initJoystick({ camera, joystickEl, isMobile });
-window.addEventListener('resize', joystickControls.resize);
+const joystickControls = initJoystick({
+  camera,
+  joystickEl,
+  isMobile
+});
+
 
 // ---- ANIMATIE LOOP ----
 function animate() {

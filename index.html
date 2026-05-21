@@ -14,20 +14,27 @@
     <script src="js/Mainroom.js"></script>
 
 
-  <div id="crosshair" style="
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  pointer-events: none;
-  z-index: 100;
-">
-  <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: white;"></div>
-  <div style="position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: white;"></div>
-  <div id="joystick-zone" style="position:fixed; bottom:0; left:0; width:150px; height:150px; z-index:1000;"></div>
-</div>
+  <div id="crosshair"
+        style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        pointer-events: none;
+        z-index: 100;
+    ">
+        <div style="position:absolute; top:50%; left:0; width:100%; height:1px; background:white;"></div>
+        <div style="position:absolute; left:50%; top:0; width:1px; height:100%; background:white;"></div>
+    </div>
+
+    <div id="joystick-zone"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <script src="js/Mainroom.js"></script>
+
 </body>
 
 </html>

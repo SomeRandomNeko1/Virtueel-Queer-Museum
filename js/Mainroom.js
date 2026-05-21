@@ -985,6 +985,7 @@ document.addEventListener('pointerlockchange', function() {
   }
 });
 
+// ---- JOYSTICK ----
 function initJoystick({ camera, joystickEl, isMobile }) {
 
   if (!joystickEl) {
@@ -1078,7 +1079,6 @@ const joystickControls = initJoystick({
   joystickEl,
   isMobile
 });
-
 
 // ---- ANIMATIE LOOP ----
 function animate() {

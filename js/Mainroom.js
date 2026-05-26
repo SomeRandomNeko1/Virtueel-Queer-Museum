@@ -1067,11 +1067,11 @@ function initJoystick({ camera, joystickEl, isMobile }) {
 const joystickEl = document.getElementById('joystick-zone');
 
 const isMobile =
-  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  /Android|iPhone|iPad/i.test(navigator.userAgent)
   || ('ontouchstart' in window);
 
 if (!isMobile) {
-  joystickEl.style.display = 'none';
+  joystickEl.style.display = "none";
 }
 
 const joystickControls = initJoystick({

@@ -1,45 +1,143 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Virtueel Queer Museum</title>
-
-    <link rel="stylesheet" href="css/style.css" />
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museum of Digital Arts</title>
+    <link rel="stylesheet" href="/menu/menu.css" />
 </head>
 
 <body>
+    <!-- Three.js Canvas & Loader -->
+    <canvas id="three-canvas"></canvas>
+    <canvas id="c" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:4; display:none;"></canvas>
+    <div id="three-loader">Preparing entrance...</div>
+    <div id="transition-overlay"></div>
 
-    <canvas id="c"></canvas>
+    <!-- Background & Decor (light theme) -->
+    <div class="bg-pattern"></div>
+    <div class="floating-decor decor-1"></div>
+    <div class="floating-decor decor-2"></div>
+    <div class="floating-decor decor-3"></div>
+    <div class="floating-decor decor-4"></div>
+    <div class="menu-corner corner-tl"></div>
+    <div class="menu-corner corner-tr"></div>
+    <div class="menu-corner corner-bl"></div>
+    <div class="menu-corner corner-br"></div>
+    <div class="decorative-line"></div>
+    <div class="decorative-line horizontal"></div>
 
-    <!-- Crosshair -->
-    <div id="crosshair"
-        style="
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 20px;
-        height: 20px;
-        pointer-events: none;
-        z-index: 100;
-    ">
-        <div style="position:absolute; top:50%; left:0; width:100%; height:1px; background:white;"></div>
-        <div style="position:absolute; left:50%; top:0; width:1px; height:100%; background:white;"></div>
+    <!-- Main Menu (LIGHT THEME) -->
+    <div id="menu-overlay">
+        <div class="menu-header">
+            <div class="subtitle">Welcome to the</div>
+            <h1>Virtual Art<br>Pride</h1>
+            <div class="divider"></div>
+            <div class="tagline">Where imagination becomes reality</div>
+        </div>
+        <div class="menu-buttons">
+            <button class="menu-btn btn-animate" id="btn-start">
+                <span class="btn-icon">▸</span>Begin Tour
+            </button>
+            <button class="menu-btn btn-animate" id="btn-options">
+                <span class="btn-icon">◈</span>Options
+            </button>
+            <button class="menu-btn btn-animate" id="btn-exit">
+                <span class="btn-icon">✦</span>Exit
+            </button>
+        </div>
     </div>
 
-    <!-- Joystick -->
-    <div id="joystick-zone"></div>
+    <!-- Options Panel -->
+    <div class="options-panel" id="options-panel">
+        <div class="options-content">
+            <h2>Options</h2>
+            <div class="options-divider"></div>
+            <div class="option-row">
+                <span class="option-label">Music</span>
+                <div class="option-control">
+                    <div class="slider-container" id="music-slider" data-value="75">
+                        <div class="slider-fill" style="width: 75%"></div>
+                        <div class="slider-thumb" style="left: 75%"></div>
+                    </div>
+                    <span class="slider-value">75</span>
+                </div>
+            </div>
+            <div class="option-row">
+                <span class="option-label">Ambience</span>
+                <div class="option-control">
+                    <div class="slider-container" id="sfx-slider" data-value="60">
+                        <div class="slider-fill" style="width: 60%"></div>
+                        <div class="slider-thumb" style="left: 60%"></div>
+                    </div>
+                    <span class="slider-value">60</span>
+                </div>
+            </div>
+            <div class="option-row">
+                <span class="option-label">Quality</span>
+                <div class="option-control">
+                    <button class="select-btn" id="quality-btn">High</button>
+                </div>
+            </div>
+            <div class="option-row">
+                <span class="option-label">Fullscreen</span>
+                <div class="option-control">
+                    <div class="toggle-switch" id="fullscreen-toggle">
+                        <div class="toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="option-row">
+                <span class="option-label">Subtitles</span>
+                <div class="option-control">
+                    <div class="toggle-switch active" id="subtitles-toggle">
+                        <div class="toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="back-btn" id="options-back">Return</button>
+        </div>
+    </div>
 
-    <!-- Libraries -->
+    <!-- Exit Confirmation -->
+    <div class="exit-panel" id="exit-panel">
+        <div class="exit-content">
+            <h2>Leaving so soon?</h2>
+            <p>The exhibits will await your return.</p>
+            <div class="exit-buttons">
+                <button class="exit-yes" id="exit-yes">Depart</button>
+                <button class="exit-no" id="exit-no">Stay</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-footer">Est. MMXXIV &nbsp;·&nbsp; Admission Free &nbsp;·&nbsp; Open Always</div>
+
+    <!-- Three.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <script src="/js/Mainroom.js" defer></script>
+    <script src="/menu/menu.js" defer></script>
 
-    <!-- Jouw code -->
-    <script src="js/Mainroom.js"></script>
 
+
+    <div id="crosshair" style="
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 100;
+  display: none;
+">
+        <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: white;"></div>
+        <div style="position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: white;"></div>
+        <div id="joystick-zone" style="position:fixed; bottom:0; left:0; width:150px; height:150px; z-index:1000;">
+        </div>
+    </div>
 </body>
 
 </html>

@@ -283,8 +283,39 @@
         const optionsPanel = document.getElementById('options-panel');
         const exitPanel = document.getElementById('exit-panel');
         const transitionOverlay = document.getElementById('transition-overlay');
+        const startBtn = document.getElementById('btn-start');
+
+        const startNotice = document.createElement('div');
+        startNotice.id = 'start-notice';
+        startNotice.textContent = 'Accepteer eerst de cookies om te kunnen beginnen.';
+        startNotice.style.cssText = 'margin-top: 12px; font-family: "Cormorant Garamond", serif; font-size: 14px; color: rgba(60,50,45,0.85); text-align:center;';
+        document.querySelector('.menu-buttons').appendChild(startNotice);
+
+        const cookieConsentGiven = () => localStorage.getItem('cookieConsent') !== null;
+        const updateStartButton = () => {
+            const allowed = cookieConsentGiven();
+            startBtn.disabled = !allowed;
+            startBtn.classList.toggle('disabled', !allowed);
+            startNotice.textContent = allowed
+                ? 'Je hebt cookies gekozen. Begin de tour nu.'
+                : 'Accepteer eerst de cookies om te kunnen beginnen.';
+        };
+        updateStartButton();
+        window.addEventListener('cookieConsentChanged', updateStartButton);
 
         document.getElementById('btn-start').addEventListener('click', () => {
+            if (!cookieConsentGiven()) {
+                const cookieBanner = document.getElementById('cookie-banner');
+                if (cookieBanner) cookieBanner.classList.remove('hidden');
+                startBtn.classList.add('shake');
+                setTimeout(() => startBtn.classList.remove('shake'), 500);
+                return;
+            }
+
+            // hiding cookie banner when entering
+            const cookieBanner = document.getElementById('cookie-banner');
+            if (cookieBanner) cookieBanner.style.display = 'none';
+
             // 1. Fade out WHITE menu
             menuOverlay.classList.add('hidden');
 
@@ -327,6 +358,11 @@
             }, 1000);
         });
 
+        // load cookie only in menu
+        const cookieScript = document.createElement('script');
+        cookieScript.src = '/function/cookies.js';
+        document.head.appendChild(cookieScript);
+        
         // Sliders & toggles (unchanged)
         document.querySelectorAll('.slider-container').forEach(slider => {
             let drag = false;

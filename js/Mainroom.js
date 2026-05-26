@@ -178,6 +178,70 @@ for (let i = 0; i < sides; i++) {
     scene.add(topWall);
   }
 
+  // ---- BORDJES HOOFDHAL ----
+const kamerNamen = ['Kamer 1', 'Kamer 2', 'Kamer 3', 'Kamer 4'];
+let kamerIndex = 0;
+
+for (let i = 0; i < sides; i++) {
+  if (i === 2) continue;
+
+  const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
+  const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
+
+  const x1 = Math.cos(angle1) * radius;
+  const z1 = Math.sin(angle1) * radius;
+  const x2 = Math.cos(angle2) * radius;
+  const z2 = Math.sin(angle2) * radius;
+
+  const cx = (x1 + x2) / 2;
+  const cz = (z1 + z2) / 2;
+  const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
+
+  // 1e, 2e, 3e = links | 4e = rechts
+  const offsetX = kamerIndex < 3 ? -2.5 : 2;
+
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 1024;
+  signCanvas.height = 512;
+  const ctx = signCanvas.getContext('2d');
+
+  ctx.fillStyle = '#995F2F';
+  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'Bold 220px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(kamerNamen[kamerIndex], 512, 256);
+
+  // Frame
+  const signFrame = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 0.7, 0.04),
+    new THREE.MeshStandardMaterial({ color: 0x3e2723 })
+  );
+  signFrame.position.set(cx, 1.9, cz);
+  signFrame.rotation.y = wallAngle;
+  signFrame.translateZ(0.1);
+  signFrame.translateX(offsetX); // ← links of rechts
+  scene.add(signFrame);
+
+  // Tekstplaat
+  const signPlate = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.1, 0.6),
+    new THREE.MeshStandardMaterial({
+      map: new THREE.CanvasTexture(signCanvas),
+      roughness: 0.6
+    })
+  );
+  signPlate.position.set(cx, 1.9, cz);
+  signPlate.rotation.y = wallAngle;
+  signPlate.translateZ(0.13);
+  signPlate.translateX(offsetX); // ← zelfde waarde
+  scene.add(signPlate);
+
+  kamerIndex++;
+}
+
+
   // --- Veilige Poster Sectie ---
   const posterData = sideWallImages.find(item => item.targetWallIndex === i);
 

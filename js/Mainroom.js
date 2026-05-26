@@ -647,11 +647,20 @@ roomPositions.forEach((kamer, i) => {
   configs.forEach(cfg => {
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 1.5),
-      new THREE.MeshStandardMaterial({ color: 0x333333 })
+      new THREE.MeshStandardMaterial({ 
+        color: 0xffffff, // Veranderd naar wit zodat de texture-kleuren straks kloppen
+        transparent: true,
+        opacity: 0 // Begint volledig transparant
+      })
     );
+    
+    // Je kunt er ook voor kiezen om de mesh volledig onzichtbaar te maken:
+    mesh.visible = false; 
+
     mesh.position.set(cfg.x, 2.5, cfg.z);
     mesh.rotation.y = cfg.rotY;
     scene.add(mesh);
+    
     kunstwerken.push({ mesh, angle: cfg.rotY });
     addButtonsForMesh(mesh);
   });

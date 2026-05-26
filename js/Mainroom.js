@@ -993,54 +993,75 @@ function insidePentagon(x, z) {
 // ---- HELP KNOP & INSTRUCTIES ----
 const helpKnop = document.createElement('div');
 helpKnop.innerHTML = "?";
-helpKnop.style.cssText = "position:fixed; bottom:20px; right:20px; width:40px; height:40px; background:#444; color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:4000; font-family:sans-serif; border:none; box-shadow: 0px 2px 5px rgba(0,0,0,0.3);";
+helpKnop.style.cssText = "position:fixed; bottom:20px; right:20px; width:40px; height:40px; background:#995F2F; color:#fff8f0; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:4000; font-family:sans-serif; border:1px solid #d4a842; box-shadow:0px 2px 8px rgba(0,0,0,0.3); font-size:18px;";
 document.body.appendChild(helpKnop);
 
 const infoScherm = document.createElement('div');
-infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.7); color:white; display:none; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif; cursor:pointer;";
+infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif;";
 
 const isMobiel = "ontouchstart" in window;
 
+// Helper functie om herhaling in de lijst-items te voorkomen
+const maakItem = (num, titel, desc, border = true) => `
+  <div style="display:flex; align-items:center; gap:14px; padding:13px 0; ${border ? 'border-bottom:1px solid #e0cdb0;' : ''}">
+    <div style="width:30px; height:30px; border-radius:50%; background:#7a3a1a; color:#fdecc8; font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${num}</div>
+    <div><div style="color:#3a2010; font-size:13px; font-weight:500;">${titel}</div><div style="color:#907050; font-size:12px; margin-top:2px;">${desc}</div></div>
+  </div>
+`;
+
 infoScherm.innerHTML = `
-  <div style="padding:25px; background:white; color:black; border-radius:8px; text-align:center; width:280px; box-shadow: 0px 4px 15px rgba(0,0,0,0.5);">
-    <h3 style="margin-top:0;">Besturing voor VR museum</h3>
-    <div style="margin:15px 0; font-size:14px; line-height:1.5; text-align:left;">
-      ${isMobiel ?
-        "• Swipe om rond te kijken<br>• Tik op schilderij voor info" :
-        "• Lopen: WASD <br>• Kijken: Muis<br>• Klik op schilderij voor info<br>• Scroll om in/uit te zoomen"}
+  <div style="display:flex; border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4); width:540px; max-width:95vw;" onclick="event.stopPropagation()">
+    
+    <div style="width:200px; flex-shrink:0; background:#7a3a1a; padding:32px 22px; display:flex; flex-direction:column; justify-content:space-between; border-right:1px solid #c08040;">
+      <div>
+        <div style="width:44px; height:44px; border-radius:10px; background:#a04020; display:flex; align-items:center; justify-content:center; margin-bottom:20px; border:1px solid #e0b060;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f5d080" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        </div>
+        <h2 style="color:#fdecc8; font-size:18px; font-weight:500; margin:0 0 12px;">VR Museum</h2>
+        <p style="color:#e8c898; font-size:13px; line-height:1.7; margin:0;">Een virtuele galerie over queer identiteit, geschiedenis en zelfexpressie.</p>
+      </div>
+      <span style="display:inline-block; background:rgba(255,220,150,0.2); color:#f5d080; font-size:10px; padding:5px 12px; border-radius:20px; letter-spacing:1px; text-transform:uppercase; margin-top:28px; border:1px solid rgba(255,220,150,0.35); width:fit-content;">Welkom</span>
     </div>
-    <button style="padding:10px 20px; background:#333; color:white; border:none; border-radius:4px; cursor:pointer; width:100%;">Start</button>
+
+    <div style="flex:1; background:#f5ede0; padding:32px 26px; display:flex; flex-direction:column; justify-content:space-between;">
+      <div style="font-size:11px; color:#a07040; letter-spacing:1px; text-transform:uppercase; margin-bottom:18px; font-weight:500;">Hoe te navigeren</div>
+      
+      <div style="display:flex; flex-direction:column; flex:1;">
+        ${isMobiel ? `
+          ${maakItem(1, "Rondkijken", "Swipe over het scherm")}
+          ${maakItem(2, "Kunstwerk bekijken", "Tik op het kunstwerk", false)}
+        ` : `
+          ${maakItem(1, "Lopen", "Gebruik de W A S D toetsen")}
+          ${maakItem(2, "Rondkijken", "Beweeg de muis")}
+          ${maakItem(3, "Kunstwerk bekijken", "Klik erop")}
+          ${maakItem(4, "Inzoomen", "Gebruik het scrollwiel", false)}
+        `}
+      </div>
+
+      <button id="startKnop" style="background:#7a3a1a; color:#fdecc8; border:none; padding:13px 0; width:100%; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; letter-spacing:1px; margin-top:20px;">Betreed het museum</button>
+    </div>
+
   </div>
 `;
 document.body.appendChild(infoScherm);
 
 function startMuseum() {
   infoScherm.style.display = "none";
-  if (!isMobiel && typeof canvas !== 'undefined') {
-    canvas.requestPointerLock();
-  }
+  if (!isMobiel && typeof canvas !== 'undefined') canvas.requestPointerLock();
 }
 
-function toonGids() {
-  infoScherm.style.display = "flex";
-}
+function toonGids() { infoScherm.style.display = "flex"; }
 
 infoScherm.onclick = startMuseum;
-
-helpKnop.onclick = function(e) {
-  e.stopPropagation();
-  toonGids();
-};
+infoScherm.querySelector('#startKnop').onclick = startMuseum;
+helpKnop.onclick = (e) => { e.stopPropagation(); toonGids(); };
 
 let museumGestart = false;
 
 document.addEventListener('pointerlockchange', function() {
   const popupOpen = document.querySelector('#kaart') !== null;
-  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) {
-    toonGids();
-  }
+  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) toonGids();
 });
-
 // ---- JOYSTICK ----
 function initJoystick({ camera, joystickEl, isMobile }) {
   if (!joystickEl) {

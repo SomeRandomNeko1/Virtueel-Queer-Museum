@@ -285,6 +285,10 @@
         const transitionOverlay = document.getElementById('transition-overlay');
 
         document.getElementById('btn-start').addEventListener('click', () => {
+            // hiding cookie banner when entering
+            const cookieBanner = document.getElementById('cookie-banner');
+            if (cookieBanner) cookieBanner.style.display = 'none';
+
             // 1. Fade out WHITE menu
             menuOverlay.classList.add('hidden');
 
@@ -327,6 +331,11 @@
             }, 1000);
         });
 
+        // load cookie oly in menu
+        const cookieScript = document.createElement('script');
+        cookieScript.src = '/functions/cookies.js';
+        document.head.appendChild(cookieScript);
+        
         // Sliders & toggles (unchanged)
         document.querySelectorAll('.slider-container').forEach(slider => {
             let drag = false;

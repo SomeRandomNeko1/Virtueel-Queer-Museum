@@ -466,6 +466,60 @@ function checkTouchZones() {
   isInTouchZone = currentlyInZone;
 }
 
+function maakPlant(x, z) {
+  const plantGroup = new THREE.Group();
+
+  // pot
+  const pot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.28, 0.38, 0.45, 18),
+    new THREE.MeshStandardMaterial({ color: 0x6b4f3a, roughness: 0.9 })
+  );
+  pot.position.y = 0.225;
+  plantGroup.add(pot);
+
+  // stam (1 solide stam → geen zweven meer)
+  const stam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.07, 1.05, 10),
+    new THREE.MeshStandardMaterial({ color: 0x3b2f2f })
+  );
+  stam.position.y = 0.95; // netjes van pot tot bladbasis
+  plantGroup.add(stam);
+
+  // blad materiaal
+  const leafMat = new THREE.MeshStandardMaterial({
+    color: 0x2f9e5c,
+    roughness: 0.85
+  });
+
+  // compacte “top cluster” (geen zwevende losse hoogteverschillen)
+  const bladPosities = [
+    [0, 1.45, 0],
+    [0.18, 1.45, 0.1],
+    [-0.18, 1.45, -0.1],
+    [0.12, 1.55, -0.12],
+    [-0.12, 1.55, 0.12],
+    [0, 1.6, 0.18],
+    [0.08, 1.62, -0.08],
+    [-0.08, 1.62, 0.08]
+  ];
+
+  bladPosities.forEach(p => {
+    const blad = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 14, 14),
+      leafMat
+    );
+    blad.position.set(p[0], p[1], p[2]);
+    plantGroup.add(blad);
+  });
+
+  plantGroup.position.set(x, 0, z);
+  scene.add(plantGroup);
+}
+
+// links en rechts van de deur
+maakPlant(-3.6, 17.4);
+maakPlant(3.6, 17.4);
+
 // ---- ART ROOMS ----
 const roomDepth = 10;
 const roomWidth = 12;

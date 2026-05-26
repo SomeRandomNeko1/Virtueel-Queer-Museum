@@ -517,8 +517,8 @@ function maakPlant(x, z) {
 }
 
 // links en rechts van de deur
-maakPlant(-3.6, 17.4);
-maakPlant(3.6, 17.4);
+maakPlant(-3.6, 11.4);
+maakPlant(3.6, 11.4);
 
 // ---- ART ROOMS ----
 const roomDepth = 10;

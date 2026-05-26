@@ -1029,11 +1029,10 @@ infoScherm.innerHTML = `
         <h2 style="color:#fdecc8; font-size:18px; font-weight:500; margin:0 0 12px;">VR Museum</h2>
         <p style="color:#e8c898; font-size:13px; line-height:1.7; margin:0;">Een virtuele galerie over queer identiteit, geschiedenis en zelfexpressie.</p>
       </div>
-      <span style="display:inline-block; background:rgba(255,220,150,0.2); color:#f5d080; font-size:10px; padding:5px 12px; border-radius:20px; letter-spacing:1px; text-transform:uppercase; margin-top:28px; border:1px solid rgba(255,220,150,0.35); width:fit-content;">Welkom</span>
     </div>
 
     <div style="flex:1; background:#f5ede0; padding:32px 26px; display:flex; flex-direction:column; justify-content:space-between;">
-      <div style="font-size:11px; color:#a07040; letter-spacing:1px; text-transform:uppercase; margin-bottom:18px; font-weight:500;">Hoe te navigeren</div>
+      <div style="font-size:11px; color:#a07040; letter-spacing:1px; text-transform:uppercase; margin-bottom:18px; font-weight:500;">Besturing voor VR museum</div>
       
       <div style="display:flex; flex-direction:column; flex:1;">
         ${isMobiel ? `
@@ -1041,8 +1040,8 @@ infoScherm.innerHTML = `
           ${maakItem(2, "Kunstwerk bekijken", "Tik op het kunstwerk", false)}
         ` : `
           ${maakItem(1, "Lopen", "Gebruik de W A S D toetsen")}
-          ${maakItem(2, "Rondkijken", "Beweeg de muis")}
-          ${maakItem(3, "Kunstwerk bekijken", "Klik erop")}
+          ${maakItem(2, "Rondkijken", "Beweeg met je muis")}
+          ${maakItem(3, "Kunstwerk bekijken", "Klik op linker muis")}
           ${maakItem(4, "Inzoomen", "Gebruik het scrollwiel", false)}
         `}
       </div>

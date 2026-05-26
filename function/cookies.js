@@ -109,7 +109,7 @@
     `;
     document.body.appendChild(banner);
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function initCookieBanner() {
         const cookieBanner = document.getElementById('cookie-banner');
         const agree = document.getElementById('cookie-agree');
         const disagree = document.getElementById('cookie-disagree');
@@ -130,6 +130,7 @@
         function savePrefs(prefs) {
             localStorage.setItem('cookiePreferences', JSON.stringify(prefs));
             localStorage.setItem('cookieConsent', prefs.consent || 'custom');
+            window.dispatchEvent(new Event('cookieConsentChanged'));
         }
 
         function applyPrefsToInputs() {
@@ -169,5 +170,11 @@
             savePrefs(prefs);
             hide();
         });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCookieBanner);
+    } else {
+        initCookieBanner();
+    }
 })();

@@ -105,20 +105,17 @@ extraFloor.rotation.x = -Math.PI / 2;
 extraFloor.position.y = -0.01;
 scene.add(extraFloor);
 
-// ---- MUREN & POSTERS (VEILIGE VERSIE) ----
+// ---- MUREN & POSTERS ----
 const wallHeight = 5;
 const doorHeight = 3;
 const openingWidth = 3;
 const wallMat = new THREE.MeshStandardMaterial({ color: 0xD4C4A0, side: THREE.DoubleSide });
 
-// ZORGEN DAT DE LOADER BESTAAT:
 const loader = new THREE.TextureLoader();
 
-// Hier definieer je de afbeeldingen. 
-// TIP: Verander 'image3.jpg' naar een afbeelding die écht in je map staat!
 const sideWallImages = [
-  { img: 'art/image3.jpg', targetWallIndex: 1, side: 'left',  },  // Rood als afbeelding mist
-  { img: 'art/image4.jpg', targetWallIndex: 3, side: 'right',  }  // Blauw als afbeelding mist
+  { img: 'art/image3.jpg', targetWallIndex: 1, side: 'left' },
+  { img: 'art/image4.jpg', targetWallIndex: 3, side: 'right' }
 ];
 
 for (let i = 0; i < sides; i++) {
@@ -135,74 +132,44 @@ for (let i = 0; i < sides; i++) {
   const cz = (z1 + z2) / 2;
   const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
 
-  // --- Jouw originele muren-code ---
-  if (i === 2) {
-    const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
-    const leftWall = new THREE.Mesh(leftGeo, wallMat);
-    leftWall.position.set(cx, wallHeight / 2, cz);
-    leftWall.rotation.y = wallAngle;
-    leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
-    scene.add(leftWall);
+  const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+  const leftWall = new THREE.Mesh(leftGeo, wallMat);
+  leftWall.position.set(cx, wallHeight / 2, cz);
+  leftWall.rotation.y = wallAngle;
+  leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
+  scene.add(leftWall);
 
-    const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
-    const rightWall = new THREE.Mesh(rightGeo, wallMat);
-    rightWall.position.set(cx, wallHeight / 2, cz);
-    rightWall.rotation.y = wallAngle;
-    rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
-    scene.add(rightWall);
+  const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
+  const rightWall = new THREE.Mesh(rightGeo, wallMat);
+  rightWall.position.set(cx, wallHeight / 2, cz);
+  rightWall.rotation.y = wallAngle;
+  rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
+  scene.add(rightWall);
 
-    const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
-    const topWall = new THREE.Mesh(topGeo, wallMat);
-    topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
-    topWall.rotation.y = wallAngle;
-    scene.add(topWall);
-  } else {
-    const leftGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
-    const leftWall = new THREE.Mesh(leftGeo, wallMat);
-    leftWall.position.set(cx, wallHeight / 2, cz);
-    leftWall.rotation.y = wallAngle;
-    leftWall.translateX(-(openingWidth / 2 + (wallLength - openingWidth) / 4));
-    scene.add(leftWall);
+  const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
+  const topWall = new THREE.Mesh(topGeo, wallMat);
+  topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
+  topWall.rotation.y = wallAngle;
+  scene.add(topWall);
 
-    const rightGeo = new THREE.PlaneGeometry((wallLength - openingWidth) / 2, wallHeight);
-    const rightWall = new THREE.Mesh(rightGeo, wallMat);
-    rightWall.position.set(cx, wallHeight / 2, cz);
-    rightWall.rotation.y = wallAngle;
-    rightWall.translateX(openingWidth / 2 + (wallLength - openingWidth) / 4);
-    scene.add(rightWall);
-
-    const topGeo = new THREE.PlaneGeometry(openingWidth, wallHeight - doorHeight);
-    const topWall = new THREE.Mesh(topGeo, wallMat);
-    topWall.position.set(cx, doorHeight + (wallHeight - doorHeight) / 2, cz);
-    topWall.rotation.y = wallAngle;
-    scene.add(topWall);
-  }
-
-  // --- Veilige Poster Sectie ---
+  // --- Poster Sectie ---
   const posterData = sideWallImages.find(item => item.targetWallIndex === i);
 
   if (posterData) {
-    const posterWidth = 3.5;
-    const posterHeight = 3.5;
-    const posterGeo = new THREE.PlaneGeometry(posterWidth, posterHeight);
-    
-    // We maken een basismateriaal aan met een opvallende kleur voor als het laden mislukt
-    const posterMat = new THREE.MeshStandardMaterial({ 
+    const posterGeo = new THREE.PlaneGeometry(3.5, 3.5);
+    const posterMat = new THREE.MeshStandardMaterial({
       color: posterData.fallbackColor,
-      side: THREE.DoubleSide 
+      side: THREE.DoubleSide
     });
 
-    // Probeer hier de afbeelding te laden. Als dit lukt, overschrijft hij de kleur.
     loader.load(
-      posterData.img, 
+      posterData.img,
       (texture) => { posterMat.map = texture; posterMat.needsUpdate = true; },
       undefined,
-      (err) => { console.warn("Kon afbeelding niet laden, ik gebruik de gekleurde placeholder: ", posterData.img); }
+      () => { console.warn("Kon afbeelding niet laden:", posterData.img); }
     );
 
     const poster = new THREE.Mesh(posterGeo, posterMat);
-
-    // Positionering
     poster.position.set(cx, wallHeight / 2, cz);
     poster.rotation.y = wallAngle;
 
@@ -215,6 +182,66 @@ for (let i = 0; i < sides; i++) {
     poster.translateZ(0.02);
     scene.add(poster);
   }
+}
+
+// ---- BORDJES HOOFDHAL ----
+const kamerNamen = ['Kamer 1', 'Kamer 2', 'Kamer 3', 'Kamer 4'];
+let kamerIndex = 0;
+
+for (let i = 0; i < sides; i++) {
+  if (i === 2) continue;
+
+  const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
+  const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
+
+  const x1 = Math.cos(angle1) * radius;
+  const z1 = Math.sin(angle1) * radius;
+  const x2 = Math.cos(angle2) * radius;
+  const z2 = Math.sin(angle2) * radius;
+
+  const cx = (x1 + x2) / 2;
+  const cz = (z1 + z2) / 2;
+  const wallAngle = -Math.atan2(z2 - z1, x2 - x1);
+
+  const offsetX = kamerIndex < 3 ? -2.5 : 2;
+
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 1024;
+  signCanvas.height = 512;
+  const ctx = signCanvas.getContext('2d');
+
+  ctx.fillStyle = '#995F2F';
+  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'Bold 220px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(kamerNamen[kamerIndex], 512, 256);
+
+  const signFrame = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 0.7, 0.04),
+    new THREE.MeshStandardMaterial({ color: 0x3e2723 })
+  );
+  signFrame.position.set(cx, 1.9, cz);
+  signFrame.rotation.y = wallAngle;
+  signFrame.translateZ(0.1);
+  signFrame.translateX(offsetX);
+  scene.add(signFrame);
+
+  const signPlate = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.1, 0.6),
+    new THREE.MeshStandardMaterial({
+      map: new THREE.CanvasTexture(signCanvas),
+      roughness: 0.6
+    })
+  );
+  signPlate.position.set(cx, 1.9, cz);
+  signPlate.rotation.y = wallAngle;
+  signPlate.translateZ(0.13);
+  signPlate.translateX(offsetX);
+  scene.add(signPlate);
+
+  kamerIndex++;
 }
 
 // ---- PLAFOND ----
@@ -279,68 +306,59 @@ const gangLight = new THREE.PointLight(0x622B14, 0.8);
 gangLight.position.set(0, wallHeight - 1, 17);
 scene.add(gangLight);
 
-// === LINKERMUUR POSTERS (X = -2.99) ===
-
-// Poster links 1 (Vooraan in de gang)
-const leftPosterTex1 = loader.load('art/image7.jpg'); 
+// === GANG POSTERS ===
+const leftPosterTex1 = loader.load('art/image7.jpg');
 const leftPoster1 = new THREE.Mesh(
-    new THREE.PlaneGeometry(2, 3), 
-    new THREE.MeshStandardMaterial({ map: leftPosterTex1, side: THREE.DoubleSide })
+  new THREE.PlaneGeometry(2, 3),
+  new THREE.MeshStandardMaterial({ map: leftPosterTex1, side: THREE.DoubleSide })
 );
 leftPoster1.rotation.y = Math.PI / 2;
-leftPoster1.position.set(-2.99, wallHeight / 2, 14); // Z = 14
+leftPoster1.position.set(-2.99, wallHeight / 2, 14);
 scene.add(leftPoster1);
 
-// Poster links 2 (Verderop in de gang)
-const leftPosterTex2 = loader.load('art/image8.jpg'); 
+const leftPosterTex2 = loader.load('art/image8.jpg');
 const leftPoster2 = new THREE.Mesh(
-    new THREE.PlaneGeometry(2, 3), 
-    new THREE.MeshStandardMaterial({ map: leftPosterTex2, side: THREE.DoubleSide })
+  new THREE.PlaneGeometry(2, 3),
+  new THREE.MeshStandardMaterial({ map: leftPosterTex2, side: THREE.DoubleSide })
 );
 leftPoster2.rotation.y = Math.PI / 2;
-leftPoster2.position.set(-2.99, wallHeight / 2, 19); // Z = 19
+leftPoster2.position.set(-2.99, wallHeight / 2, 19);
 scene.add(leftPoster2);
 
-
-// === RECHTERMUUR POSTERS (X = 2.99) ===
-
-// Poster rechts 1 (Tussen de twee linkerposters in)
-const rightPosterTex1 = loader.load('art/image5.jpg'); // Je kunt dit veranderen naar een eigen bestand, bijv. image7.jpg
+const rightPosterTex1 = loader.load('art/image5.jpg');
 const rightPoster1 = new THREE.Mesh(
-    new THREE.PlaneGeometry(2, 3), 
-    new THREE.MeshStandardMaterial({ map: rightPosterTex1, side: THREE.DoubleSide })
+  new THREE.PlaneGeometry(2, 3),
+  new THREE.MeshStandardMaterial({ map: rightPosterTex1, side: THREE.DoubleSide })
 );
 rightPoster1.rotation.y = -Math.PI / 2;
-rightPoster1.position.set(2.99, wallHeight / 2, 16.5); // Z = 16.5
+rightPoster1.position.set(2.99, wallHeight / 2, 16.5);
 scene.add(rightPoster1);
 
-// Poster rechts 2 (Helemaal achteraan bij het einde van de gang)
-const rightPosterTex2 = loader.load('art/image6.jpg'); // Je kunt dit veranderen naar een eigen bestand, bijv. image8.jpg
+const rightPosterTex2 = loader.load('art/image6.jpg');
 const rightPoster2 = new THREE.Mesh(
-    new THREE.PlaneGeometry(2, 3), 
-    new THREE.MeshStandardMaterial({ map: rightPosterTex2, side: THREE.DoubleSide })
+  new THREE.PlaneGeometry(2, 3),
+  new THREE.MeshStandardMaterial({ map: rightPosterTex2, side: THREE.DoubleSide })
 );
 rightPoster2.rotation.y = -Math.PI / 2;
-rightPoster2.position.set(2.99, wallHeight / 2, 20.5); // Z = 21.5
+rightPoster2.position.set(2.99, wallHeight / 2, 20.5);
 scene.add(rightPoster2);
 
 // ---- DEUR (OPEN/DICHT) ----
 const deurPivot = new THREE.Group();
-deurPivot.position.set(0, 0, 17); // midden gang ingang
+deurPivot.position.set(0, 0, 17);
 
 const deur = new THREE.Mesh(
   new THREE.BoxGeometry(1.51, 3, 0.12),
-new THREE.MeshStandardMaterial({
-  map: deurTexture,
-  roughness: 0.9,
-  metalness: 0.0,
-  color: new THREE.Color(0.6, 0.6, 0.6) // <<< dempt de brightness
-})
+  new THREE.MeshStandardMaterial({
+    map: deurTexture,
+    roughness: 0.9,
+    metalness: 0.0,
+    color: new THREE.Color(0.6, 0.6, 0.6)
+  })
 );
 const deur2 = deur.clone();
 const deurPivot2 = new THREE.Group();
 
-// Schuifdeur railing
 const bovenDeurMat = new THREE.MeshStandardMaterial({
   color: 0x000000,
   roughness: 0.8,
@@ -348,38 +366,27 @@ const bovenDeurMat = new THREE.MeshStandardMaterial({
 });
 
 const bovenDeurCylinder = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.08, 0.08, 5.8, 32), 
+  new THREE.CylinderGeometry(0.08, 0.08, 5.8, 32),
   bovenDeurMat
 );
-
 bovenDeurCylinder.position.set(0, 3.0, 12.15);
-
 bovenDeurCylinder.rotation.z = Math.PI / 2;
-
 scene.add(bovenDeurCylinder);
 
-deurPivot2.position.set(0, 0, 17); // iets naast de originele deur
+deurPivot2.position.set(0, 0, 17);
 deur2.position.set(0.75, 1.5, -4.85);
-
 deurPivot2.add(deur2);
 scene.add(deurPivot2);
 
 deur.position.set(-0.76, 1.5, -4.85);
-
 deurPivot.add(deur);
 scene.add(deurPivot);
 
-// Deur animatie 
+// Deur animatie
 let doorsOpen = false;
 let animatingDoors = false;
-let autoCloseTimeout = null;
 
 const DOOR_DURATION = 2000;
-
-let doorProgress = 0; // 0 = dicht, 1 = open
-let doorTarget = 0;
-let doorAnimating = false;
-let lastTime = null;
 
 const doorAnimation = {
   leftClosed: -0.76,
@@ -394,7 +401,7 @@ function easeInOut(t) {
     : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
-let pendingDoorState = null; // true = open, false = dicht
+let pendingDoorState = null;
 
 function animateDoors(open) {
   if (animatingDoors) return;
@@ -420,7 +427,6 @@ function animateDoors(open) {
       doorsOpen = open;
       animatingDoors = false;
 
-      // 👇 BELANGRIJK: check of er nog een actie wacht
       if (pendingDoorState !== null) {
         const next = pendingDoorState;
         pendingDoorState = null;
@@ -432,63 +438,30 @@ function animateDoors(open) {
   requestAnimationFrame(loop);
 }
 
-// Touch zone
-const buttonGeo = new THREE.CylinderGeometry(0.6, 0.4, 0.1, 32);
-
 const touchZone1 = new THREE.Mesh(
-  buttonGeo,
-  new THREE.MeshBasicMaterial({
-    transparent: true,
-    opacity: 0,
-    depthWrite: false
-  })
+  new THREE.CylinderGeometry(0.6, 0.4, 0.1, 32),
+  new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
 );
-
-// positie van de touchzone 
 touchZone1.position.set(0, 0.05, 12);
-
 scene.add(touchZone1);
 
-// deur trigger
 function triggerDoors(open) {
-  // Als er al een animatie loopt → onthoud laatste verzoek
   if (animatingDoors) {
     pendingDoorState = open;
     return;
   }
-
   animateDoors(open);
 }
 
-const touchRadius = 5; // Touchzone radius
-
-
+const touchRadius = 5;
 let isInTouchZone = false;
 
 function checkTouchZones() {
   const camPos = camera.position;
-  const zones = [touchZone1];
+  let currentlyInZone = camPos.distanceTo(touchZone1.position) < touchRadius;
 
-  let currentlyInZone = false;
-
-  for (let i = 0; i < zones.length; i++) {
-    const dist = camPos.distanceTo(zones[i].position);
-
-    if (dist < touchRadius) {
-      currentlyInZone = true;
-      break;
-    }
-  }
-
-  // 👉 BINNEN ZONE = DEUREN OPEN
-  if (currentlyInZone && !isInTouchZone) {
-    triggerDoors(true);
-  }
-
-  // 👉 BUITEN ZONE = DEUREN DICHT
-  if (!currentlyInZone && isInTouchZone) {
-    triggerDoors(false);
-  }
+  if (currentlyInZone && !isInTouchZone) triggerDoors(true);
+  if (!currentlyInZone && isInTouchZone) triggerDoors(false);
 
   isInTouchZone = currentlyInZone;
 }
@@ -558,7 +531,92 @@ for (let i = 0; i < sides; i++) {
   scene.add(roomLight);
 }
 
-// ---- SCHILDERIJEN ----
+// ---- FRAME POSITIE MAP (vanuit API-versie) ----
+const KAMER_TO_ROOM = { 1: 0, 2: 1, 3: 2, 4: 3 };
+
+const PLAATS_CONFIG = {
+  1: { wall: 'back',  offset: -2.5 },
+  2: { wall: 'back',  offset:  0   },
+  3: { wall: 'back',  offset:  2.5 },
+  4: { wall: 'left',  offset: -2.5 },
+  5: { wall: 'left',  offset:  0   },
+  6: { wall: 'left',  offset:  2.5 },
+  7: { wall: 'right', offset: -2.5 },
+  8: { wall: 'right', offset:  0   },
+  9: { wall: 'right', offset:  2.5 },
+};
+
+function getFramePosition(kamerId, plaatsNr) {
+  const roomIdx = KAMER_TO_ROOM[kamerId];
+  if (roomIdx === undefined) return null;
+
+  const kamer = roomPositions[roomIdx];
+  const angle = doors[roomIdx].wallAngle;
+  const wx = Math.sin(angle);
+  const wz = Math.cos(angle);
+  const px = Math.cos(angle);
+  const pz = -Math.sin(angle);
+  const cfg = PLAATS_CONFIG[plaatsNr];
+  if (!cfg) return null;
+
+  if (cfg.wall === 'back') {
+    return {
+      x: kamer.rx + wx * (roomDepth / 2 - 9) + px * cfg.offset,
+      y: 2.5,
+      z: kamer.rz + wz * (roomDepth / 2 - 9) + pz * cfg.offset,
+      rotY: angle
+    };
+  } else if (cfg.wall === 'left') {
+    return {
+      x: kamer.rx + px * (roomWidth / 2 - 0.1) + wx * cfg.offset,
+      y: 2.5,
+      z: kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * cfg.offset,
+      rotY: angle - Math.PI / 2
+    };
+  } else {
+    return {
+      x: kamer.rx - px * (roomWidth / 2 - 0.1) + wx * cfg.offset,
+      y: 2.5,
+      z: kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * cfg.offset,
+      rotY: angle + Math.PI / 2
+    };
+  }
+}
+
+// ---- AUDIO & LEES MEER KNOPPEN ----
+const audioButtons = [];
+const leesMeerButtons = [];
+
+// Hulpfunctie: maak knoppen aan voor een mesh op een gegeven positie/rotatie
+function addButtonsForMesh(mesh) {
+  // Audio knop (groen)
+  const btn = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+  );
+  btn.position.copy(mesh.position);
+  btn.rotation.copy(mesh.rotation);
+  btn.translateY(-1.0);
+  btn.translateX(0.9);
+  btn.translateZ(0.05);
+  scene.add(btn);
+  audioButtons.push({ button: btn, isPlaying: false });
+
+  // Lees meer knop (blauw)
+  const leesBtn = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x0000ff })
+  );
+  leesBtn.position.copy(mesh.position);
+  leesBtn.rotation.copy(mesh.rotation);
+  leesBtn.translateY(-1.0);
+  leesBtn.translateX(0.5);
+  leesBtn.translateZ(0.05);
+  scene.add(leesBtn);
+  leesMeerButtons.push({ button: leesBtn, data: mesh.userData });
+}
+
+// ---- GRIJZE PLACEHOLDERS ----
 const kunstwerken = [];
 
 roomPositions.forEach((kamer, i) => {
@@ -568,86 +626,38 @@ roomPositions.forEach((kamer, i) => {
   const px = Math.cos(angle);
   const pz = -Math.sin(angle);
 
-  [-2.5, 0, 2.5].forEach(offset => {
-    const kunst = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 1.5),
-      new THREE.MeshStandardMaterial({ color: 0x333333 })
-    );
-    kunst.position.set(
-      kamer.rx + wx * (roomDepth / 2 - 9) + px * offset,
-      2.5,
-      kamer.rz + wz * (roomDepth / 2 - 9) + pz * offset
-    );
-    kunst.rotation.y = angle;
-    scene.add(kunst);
-    kunstwerken.push({ mesh: kunst, angle });
-  });
+  const configs = [
+    ...[-2.5, 0, 2.5].map(o => ({
+      x: kamer.rx + wx * (roomDepth / 2 - 9) + px * o,
+      z: kamer.rz + wz * (roomDepth / 2 - 9) + pz * o,
+      rotY: angle
+    })),
+    ...[-2.5, 0, 2.5].map(o => ({
+      x: kamer.rx + px * (roomWidth / 2 - 0.1) + wx * o,
+      z: kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * o,
+      rotY: angle - Math.PI / 2
+    })),
+    ...[-2.5, 0, 2.5].map(o => ({
+      x: kamer.rx - px * (roomWidth / 2 - 0.1) + wx * o,
+      z: kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * o,
+      rotY: angle + Math.PI / 2
+    })),
+  ];
 
-  [-2.5, 0, 2.5].forEach(offset => {
-    const kunst = new THREE.Mesh(
+  configs.forEach(cfg => {
+    const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 1.5),
       new THREE.MeshStandardMaterial({ color: 0x333333 })
     );
-    kunst.position.set(
-      kamer.rx + px * (roomWidth / 2 - 0.1) + wx * offset,
-      2.5,
-      kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * offset
-    );
-    kunst.rotation.y = angle - Math.PI / 2;
-    scene.add(kunst);
-    kunstwerken.push({ mesh: kunst, angle: angle - Math.PI / 2 });
-  });
-
-  [-2.5, 0, 2.5].forEach(offset => {
-    const kunst = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 1.5),
-      new THREE.MeshStandardMaterial({ color: 0x333333 })
-    );
-    kunst.position.set(
-      kamer.rx - px * (roomWidth / 2 - 0.1) + wx * offset,
-      2.5,
-      kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * offset
-    );
-    kunst.rotation.y = angle + Math.PI / 2;
-    scene.add(kunst);
-    kunstwerken.push({ mesh: kunst, angle: angle + Math.PI / 2 });
+    mesh.position.set(cfg.x, 2.5, cfg.z);
+    mesh.rotation.y = cfg.rotY;
+    scene.add(mesh);
+    kunstwerken.push({ mesh, angle: cfg.rotY });
+    addButtonsForMesh(mesh);
   });
 });
 
-// ---- AUDIO KNOPPEN & LEES MEER ----
-const audioButtons = [];
-const leesMeerButtons = [];
-
-kunstwerken.forEach(k => {
-  // audio knop
-  const btn = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.3, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-  );
-  btn.position.copy(k.mesh.position);
-  btn.rotation.copy(k.mesh.rotation);
-  btn.translateY(-1.0);
-  btn.translateX(0.9);
-  btn.translateZ(0.05);
-  scene.add(btn);
-  audioButtons.push({ button: btn, isPlaying: false });
-
-  // lees meer knop
-  const leesBtn = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.3, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x0000ff })
-  );
-  leesBtn.position.copy(k.mesh.position);
-  leesBtn.rotation.copy(k.mesh.rotation);
-  leesBtn.translateY(-1.0);
-  leesBtn.translateX(0.5);
-  leesBtn.translateZ(0.05);
-  scene.add(leesBtn);
-  leesMeerButtons.push({ button: leesBtn, data: k.mesh.userData });
-});
-
-
-// ---- TEXT POPUPS ----
+// ---- STATISCHE INFO DATA (fallback voor placeholders) ----
 const infoData = [
   { titel: "Identiteit", tekst: "Dit werk verkent gender en zelfexpressie binnen de queer gemeenschap." },
   { titel: "Geschiedenis", tekst: "Een eerbetoon aan de voorvechters van gelijkheid." },
@@ -658,47 +668,74 @@ kunstwerken.forEach((k, i) => {
   k.mesh.userData = infoData[i % infoData.length];
 });
 
+// ---- API KUNSTWERKEN LADEN ----
+const API_BASE = 'http://10.120.5.132:8000';
 
+async function loadKunstwerkenFromAPI() {
+  try {
+    const [resKunst, resFrames] = await Promise.all([
+      fetch(`${API_BASE}/`),
+      fetch(`${API_BASE}/frames`)
+    ]);
+    const kunstData  = await resKunst.json();
+    const framesData = await resFrames.json();
 
-function toonInfo(data) {
-  document.exitPointerLock();
+    const frameMap = {};
+    framesData.forEach(f => {
+      frameMap[f.FramePlaatsId] = { kamerId: f.KamerId, plaatsNr: f.PlaatsNr };
+    });
 
-  const overlay = document.createElement('div');
-  overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
+    const artLoader = new THREE.TextureLoader();
+    artLoader.crossOrigin = 'anonymous';
 
-  overlay.innerHTML = `
-    <div id="kaart" style="
-  background:rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border:1px solid rgba(255,255,255,0.15);
-  padding:30px;
-  width:600px;
-  border-radius:10px;
-  display:flex;
-  gap:20px;
-  font-family:sans-serif;
-  color:white;
-">
-      <div style="flex:1;">
-        <div style="width:100%; aspect-ratio:4/3; background:#eee; border:1px solid #ccc;"></div>
-      </div>
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-        <div>
-          <h2 style="color:#aa1eaa; margin:0 0 10px 0;">${data.titel}</h2>
-          <p style="line-height:1.6; color:#333;">${data.tekst}</p>
-        </div>
-        <button id="knop" style="padding:10px 20px; background:white; color:black; border:1px solid black; border-radius:4px; cursor:pointer; align-self:flex-end;">Terug</button>
-      </div>
-    </div>`;
+    kunstData.forEach(kunst => {
+      if (!kunst.ImageUrl || !kunst.FramePlaatsId) return;
+      const frameInfo = frameMap[kunst.FramePlaatsId];
+      if (!frameInfo) return;
 
-  document.body.appendChild(overlay);
+      const pos = getFramePosition(frameInfo.kamerId, frameInfo.plaatsNr);
+      if (!pos) return;
 
-  overlay.querySelector('#knop').onclick = () => {
-    overlay.remove();
-    canvas.requestPointerLock();
-  };
+      const fileName = kunst.ImageUrl.substring(kunst.ImageUrl.lastIndexOf('/') + 1);
+      const fullImageUrl = `${API_BASE}/index.php/uploads/${fileName}`;
+
+      artLoader.load(fullImageUrl, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+
+        const w = tex.image?.width || 1;
+        const h = tex.image?.height || 1;
+        const aspect = w / h;
+        const artW = aspect >= 1 ? 2 : 2 * aspect;
+        const artH = aspect >= 1 ? 2 / aspect : 2;
+
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(artW, artH),
+          new THREE.MeshStandardMaterial({ map: tex })
+        );
+        mesh.position.set(pos.x, pos.y, pos.z);
+        mesh.rotation.y = pos.rotY;
+        mesh.userData = {
+          titel: kunst.Naam || 'Naamloos',
+          tekst: kunst.Beschrijving || '',
+          auteur: kunst.Auteur || '',
+        };
+        scene.add(mesh);
+        kunstwerken.push({ mesh, angle: pos.rotY });
+
+        // Maak ook knoppen aan voor dit API-kunstwerk
+        addButtonsForMesh(mesh);
+        // Sync lees meer button data
+        const lastLeesBtn = leesMeerButtons[leesMeerButtons.length - 1];
+        if (lastLeesBtn) lastLeesBtn.data = mesh.userData;
+      });
+    });
+
+  } catch (e) {
+    console.warn('Kon kunstwerken niet laden:', e);
+  }
 }
+
+loadKunstwerkenFromAPI();
 
 // ---- SPOTLIGHTS OP SCHILDERIJEN ----
 roomPositions.forEach((kamer, i) => {
@@ -772,6 +809,55 @@ roomPositions.forEach((kamer, i) => {
   });
 });
 
+// ---- POPUP ----
+function toonInfo(data) {
+  if (!data) return;
+  document.exitPointerLock();
+
+  const title  = data.titel       || data.Naam         || 'Naamloos Kunstwerk';
+  const description = data.tekst  || data.Beschrijving  || 'Geen beschrijving beschikbaar.';
+  const author = data.auteur      || data.Auteur        || 'Onbekende kunstenaar';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
+
+  overlay.innerHTML = `
+    <div id="kaart" style="
+      background:rgba(255,255,255,0.08);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.15);
+      padding:30px;
+      width:600px;
+      border-radius:10px;
+      display:flex;
+      gap:20px;
+      font-family:sans-serif;
+      color:white;
+    ">
+      <div style="flex:1;">
+        <div style="width:100%; aspect-ratio:4/3; background:#eee; border:1px solid #ccc; display:flex; justify-content:center; align-items:center; font-weight:bold; color:#666;">
+          ${title}
+        </div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <h2 style="color:#aa1eaa; margin:0 0 5px 0;">${title}</h2>
+          <h4 style="margin:0 0 10px 0; color:#ccc; font-style:italic;">Door: ${author}</h4>
+          <p style="line-height:1.6; color:#ddd; font-size:14px;">${description}</p>
+        </div>
+        <button id="knop" style="padding:10px 20px; background:white; color:black; border:none; border-radius:4px; cursor:pointer; align-self:flex-end;">Terug</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#knop').onclick = () => {
+    overlay.remove();
+    canvas.requestPointerLock();
+  };
+}
+
 // ---- CONTROLS ----
 const look = { yaw: 0, pitch: 0 };
 const speed = 0.05;
@@ -799,22 +885,22 @@ function setupZoom(camera, minFov = 30, maxFov = 100, sensitivity = 0.01) {
 }
 setupZoom(camera);
 
-// ---- AUDIO & LEES MEER CLICK ----
+// ---- KLIK HANDLER (audio + lees meer) ----
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let currentPlaying = null;
 
 window.addEventListener('click', () => {
   if (document.pointerLockElement !== canvas) return;
-  
+
   mouse.x = 0;
   mouse.y = 0;
   raycaster.setFromCamera(mouse, camera);
 
-  // audio check
-  const hits = raycaster.intersectObjects(audioButtons.map(b => b.button));
-  if (hits.length && sound.buffer) {
-    const btn = audioButtons.find(b => b.button === hits[0].object);
+  // Audio check
+  const audioHits = raycaster.intersectObjects(audioButtons.map(b => b.button));
+  if (audioHits.length && sound.buffer) {
+    const btn = audioButtons.find(b => b.button === audioHits[0].object);
     if (btn) {
       if (btn.isPlaying) {
         sound.stop();
@@ -836,15 +922,13 @@ window.addEventListener('click', () => {
     }
   }
 
-  // lees meer check
+  // Lees meer check
   const leesMeerHits = raycaster.intersectObjects(leesMeerButtons.map(b => b.button));
   if (leesMeerHits.length > 0) {
     const gevonden = leesMeerButtons.find(b => b.button === leesMeerHits[0].object);
     if (gevonden) toonInfo(gevonden.data);
   }
 });
-
-
 
 // ---- MOVEMENT ----
 function updateMovement() {
@@ -869,54 +953,26 @@ function updateMovement() {
 }
 
 function isAllowed(x, z) {
-
-  // ---- GANG ----
-  const inGang =
-    x > -2.9 &&
-    x < 2.9 &&
-    z > 12 &&
-    z < 22;
-
-  // ---- HOOFDHAL ----
+  const inGang = x > -2.9 && x < 2.9 && z > 12 && z < 22;
   const inHal = insidePentagon(x, z);
 
-  // ---- KAMERS ----
   let inRoom = false;
-
   roomPositions.forEach((r, i) => {
-
     const angle = doors[i].wallAngle;
-
-    // speler relatief aan kamer
     const dx = x - r.rx;
     const dz = z - r.rz;
-
-    // roteer naar lokale kamer-space
-    const localX =
-      dx * Math.cos(angle) -
-      dz * Math.sin(angle);
-
-    const localZ =
-      dx * Math.sin(angle) +
-      dz * Math.cos(angle);
-
-    // strakke kamer collision
+    const localX =  dx * Math.cos(angle) - dz * Math.sin(angle);
+    const localZ =  dx * Math.sin(angle) + dz * Math.cos(angle);
     const halfWidth = roomWidth / 2 - 0.4;
     const halfDepth = roomDepth / 2 + 1.5;
-
-    if (
-      localX > -halfWidth &&
-      localX < halfWidth &&
-      localZ > -halfDepth &&
-      localZ < halfDepth
-    ) {
+    if (localX > -halfWidth && localX < halfWidth && localZ > -halfDepth && localZ < halfDepth) {
       inRoom = true;
     }
-
   });
 
   return inGang || inHal || inRoom;
 }
+
 function insidePentagon(x, z) {
   for (let i = 0; i < sides; i++) {
     if (i === 2) continue;
@@ -987,69 +1043,44 @@ document.addEventListener('pointerlockchange', function() {
 
 // ---- JOYSTICK ----
 function initJoystick({ camera, joystickEl, isMobile }) {
-
   if (!joystickEl) {
     console.error("joystickEl is null");
-    return {
-      update() {},
-      resize() {}
-    };
+    return { update() {}, resize() {} };
   }
 
   const move = { x: 0, y: 0 };
 
-  if (isMobile) {
-  joystickEl.style.display = 'block';
-}
+  if (isMobile) joystickEl.style.display = 'block';
 
-  let joystick = nipplejs.create({
+  const joystick = nipplejs.create({
     zone: joystickEl,
     mode: 'static',
-    position: {
-      left: '55px',
-      bottom: '55px'
-    },
+    position: { left: '55px', bottom: '55px' },
     color: 'white',
     size: 80
   });
 
   joystick.on('move', (_, data) => {
-
     if (!data || !data.vector) return;
-
     move.x = data.vector.x;
     move.y = -data.vector.y;
   });
 
   joystick.on('end', () => {
-
     move.x = 0;
     move.y = 0;
   });
 
   function update() {
-
     const spd = 0.05;
-
-    const forward = new THREE.Vector3(
-      Math.sin(look.yaw),
-      0,
-      Math.cos(look.yaw)
-    );
-
-    const right = new THREE.Vector3(
-      Math.cos(look.yaw),
-      0,
-      -Math.sin(look.yaw)
-    );
+    const forward = new THREE.Vector3(Math.sin(look.yaw), 0, Math.cos(look.yaw));
+    const right   = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
 
     const next = camera.position.clone();
-
     next.add(forward.multiplyScalar(move.y * spd));
     next.add(right.multiplyScalar(move.x * spd));
 
     if (isAllowed(next.x, next.z)) {
-
       camera.position.x = next.x;
       camera.position.z = next.z;
     }
@@ -1058,27 +1089,14 @@ function initJoystick({ camera, joystickEl, isMobile }) {
   return { update };
 }
 
-  function resize() {
-    if (joystick) {
-      joystick.options.size = Math.min(innerWidth, innerHeight) * 0.15;
-    }
-  }
-
 const joystickEl = document.getElementById('joystick-zone');
 
 const isMobile =
-  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-  || ('ontouchstart' in window);
+  /Android|iPhone|iPad/i.test(navigator.userAgent) || ('ontouchstart' in window);
 
-if (!isMobile) {
-  joystickEl.style.display = 'none';
-}
+if (!isMobile) joystickEl.style.display = "none";
 
-const joystickControls = initJoystick({
-  camera,
-  joystickEl,
-  isMobile
-});
+const joystickControls = initJoystick({ camera, joystickEl, isMobile });
 
 // ---- ANIMATIE LOOP ----
 function animate() {

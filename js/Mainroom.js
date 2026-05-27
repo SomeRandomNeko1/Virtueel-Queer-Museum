@@ -12,17 +12,21 @@ scene.background = new THREE.Color(0x1a1a1a);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 1.9, 17);
 
-// ---- AUDIO ----
+// ==== AUDIO SETUP ====
 const listener = new THREE.AudioListener();
-camera.add(listener);
+let globalAudio = null;
 
-const sound = new THREE.Audio(listener);
-const audioLoader = new THREE.AudioLoader();
-audioLoader.load('audio/sound.mp3', buffer => {
-  sound.setBuffer(buffer);
-  sound.setLoop(false);
-  sound.setVolume(0.5);
-});
+// We wachten met het toevoegen van de listener tot de eerste klik
+let audioContextInitialized = false;
+
+function initAudioContext() {
+    if (audioContextInitialized) return;
+    camera.add(listener);
+    globalAudio = new THREE.Audio(listener);
+    globalAudio.setVolume(0.75);
+    audioContextInitialized = true;
+    console.log("AudioContext geïnitialiseerd na user gesture");
+}
 
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
@@ -587,22 +591,47 @@ function getFramePosition(kamerId, plaatsNr) {
 const audioButtons = [];
 const leesMeerButtons = [];
 
-// Hulpfunctie: maak knoppen aan voor een mesh op een gegeven positie/rotatie
-function addButtonsForMesh(mesh) {
-  // Audio knop (groen)
-  const btn = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.3, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-  );
-  btn.position.copy(mesh.position);
-  btn.rotation.copy(mesh.rotation);
-  btn.translateY(-1.0);
-  btn.translateX(0.9);
-  btn.translateZ(0.05);
-  scene.add(btn);
-  audioButtons.push({ button: btn, isPlaying: false });
+// Hulpfunctie: maak knoppen aan voor een mesh
+function addButtonsForMesh(mesh, audioPath = null) {
+  const hasAudio = audioPath && audioPath.trim() !== '';
+  
+  // Alleen audio knop als er audio is
+  if (hasAudio) {
+    const btn = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.3, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+    );
+    btn.position.copy(mesh.position);
+    btn.rotation.copy(mesh.rotation);
+    btn.translateY(-1.0);
+    btn.translateX(0.9);
+    btn.translateZ(0.05);
+    scene.add(btn);
+    
+    // Laad specifieke audio voor dit kunstwerk
+    const audioLoader = new THREE.AudioLoader();
+    const specificSound = new THREE.Audio(listener);
+    
+    // Construeer volledige URL als het een relatief pad is
+    const fullAudioUrl = audioPath.startsWith('http') ? audioPath : `${API_BASE}${audioPath}`;
+    
+    audioLoader.load(fullAudioUrl, (buffer) => {
+      specificSound.setBuffer(buffer);
+      specificSound.setLoop(false);
+      specificSound.setVolume(0.5);
+    }, undefined, (err) => {
+      console.warn('Kon audio niet laden:', fullAudioUrl, err);
+    });
+    
+    audioButtons.push({ 
+      button: btn, 
+      isPlaying: false, 
+      audio: specificSound,
+      mesh: mesh 
+    });
+  }
 
-  // Lees meer knop (blauw)
+  // Lees meer knop (altijd toevoegen als er beschrijving is, of fallback voor placeholders)
   const leesBtn = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.05),
     new THREE.MeshStandardMaterial({ color: 0x0000ff })
@@ -610,10 +639,15 @@ function addButtonsForMesh(mesh) {
   leesBtn.position.copy(mesh.position);
   leesBtn.rotation.copy(mesh.rotation);
   leesBtn.translateY(-1.0);
-  leesBtn.translateX(0.5);
+  // Als er geen audio is, zetten we de lees-meer knop meer naar rechts (centraal)
+  leesBtn.translateX(hasAudio ? 0.5 : 0.7);
   leesBtn.translateZ(0.05);
   scene.add(leesBtn);
-  leesMeerButtons.push({ button: leesBtn, data: mesh.userData });
+  
+  leesMeerButtons.push({ 
+    button: leesBtn, 
+    data: mesh.userData 
+  });
 }
 
 // ---- GRIJZE PLACEHOLDERS ----
@@ -722,9 +756,8 @@ async function loadKunstwerkenFromAPI() {
         scene.add(mesh);
         kunstwerken.push({ mesh, angle: pos.rotY });
 
-        // Maak ook knoppen aan voor dit API-kunstwerk
-        addButtonsForMesh(mesh);
-        // Sync lees meer button data
+        // Maak ook knoppen aan voor dit API-kunstwerk  
+        addButtonsForMesh(mesh, kunst.Audiopath);        // Sync lees meer button data
         const lastLeesBtn = leesMeerButtons[leesMeerButtons.length - 1];
         if (lastLeesBtn) lastLeesBtn.data = mesh.userData;
       });
@@ -899,24 +932,26 @@ window.addEventListener('click', () => {
 
   // Audio check
   const audioHits = raycaster.intersectObjects(audioButtons.map(b => b.button));
-  if (audioHits.length && sound.buffer) {
+  if (audioHits.length > 0) {
     const btn = audioButtons.find(b => b.button === audioHits[0].object);
-    if (btn) {
+    if (btn && btn.audio) {
+      // Stop andere audio eerst
+      audioButtons.forEach(otherBtn => {
+        if (otherBtn.isPlaying && otherBtn !== btn) {
+          otherBtn.audio.stop();
+          otherBtn.isPlaying = false;
+          otherBtn.button.material.color.set(0x00ff00);
+        }
+      });
+      
       if (btn.isPlaying) {
-        sound.stop();
+        btn.audio.stop();
         btn.isPlaying = false;
         btn.button.material.color.set(0x00ff00);
-        currentPlaying = null;
       } else {
-        if (currentPlaying && currentPlaying !== btn) {
-          sound.stop();
-          currentPlaying.isPlaying = false;
-          currentPlaying.button.material.color.set(0x00ff00);
-        }
-        sound.play();
+        btn.audio.play();
         btn.isPlaying = true;
         btn.button.material.color.set(0xff0000);
-        currentPlaying = btn;
       }
       return;
     }

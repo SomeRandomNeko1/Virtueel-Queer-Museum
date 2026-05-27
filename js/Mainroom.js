@@ -411,6 +411,18 @@ function animateDoors(open) {
   if (animatingDoors) return;
   animatingDoors = true;
 
+// Schuifdeur geluid
+  
+  let audio = document.querySelector(".schuifDeurGeluid");
+  setTimeout(function(){
+    audio.play();
+
+    setTimeout(function(){
+        audio.pause();
+        audio.currentTime = 0;
+    }, 2000);
+}, 0);
+
   const start = performance.now();
 
   function loop(now) {

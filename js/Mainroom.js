@@ -12,17 +12,21 @@ scene.background = new THREE.Color(0x1a1a1a);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 1.9, 17);
 
-// ---- AUDIO ----
+// ==== AUDIO SETUP ====
 const listener = new THREE.AudioListener();
-camera.add(listener);
+let globalAudio = null;
 
-const sound = new THREE.Audio(listener);
-const audioLoader = new THREE.AudioLoader();
-audioLoader.load('audio/sound.mp3', buffer => {
-  sound.setBuffer(buffer);
-  sound.setLoop(false);
-  sound.setVolume(0.5);
-});
+// We wachten met het toevoegen van de listener tot de eerste klik
+let audioContextInitialized = false;
+
+function initAudioContext() {
+    if (audioContextInitialized) return;
+    camera.add(listener);
+    globalAudio = new THREE.Audio(listener);
+    globalAudio.setVolume(0.75);
+    audioContextInitialized = true;
+    console.log("AudioContext geïnitialiseerd na user gesture");
+}
 
 // ---- RESIZE ----
 window.addEventListener('resize', () => {
@@ -466,6 +470,60 @@ function checkTouchZones() {
   isInTouchZone = currentlyInZone;
 }
 
+function maakPlant(x, z) {
+  const plantGroup = new THREE.Group();
+
+  // pot
+  const pot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.28, 0.38, 0.45, 18),
+    new THREE.MeshStandardMaterial({ color: 0x6b4f3a, roughness: 0.9 })
+  );
+  pot.position.y = 0.225;
+  plantGroup.add(pot);
+
+  // stam (1 solide stam → geen zweven meer)
+  const stam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.07, 1.05, 10),
+    new THREE.MeshStandardMaterial({ color: 0x3b2f2f })
+  );
+  stam.position.y = 0.95; // netjes van pot tot bladbasis
+  plantGroup.add(stam);
+
+  // blad materiaal
+  const leafMat = new THREE.MeshStandardMaterial({
+    color: 0x2f9e5c,
+    roughness: 0.85
+  });
+
+  // compacte “top cluster” (geen zwevende losse hoogteverschillen)
+  const bladPosities = [
+    [0, 1.45, 0],
+    [0.18, 1.45, 0.1],
+    [-0.18, 1.45, -0.1],
+    [0.12, 1.55, -0.12],
+    [-0.12, 1.55, 0.12],
+    [0, 1.6, 0.18],
+    [0.08, 1.62, -0.08],
+    [-0.08, 1.62, 0.08]
+  ];
+
+  bladPosities.forEach(p => {
+    const blad = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 14, 14),
+      leafMat
+    );
+    blad.position.set(p[0], p[1], p[2]);
+    plantGroup.add(blad);
+  });
+
+  plantGroup.position.set(x, 0, z);
+  scene.add(plantGroup);
+}
+
+// links en rechts van de deur
+maakPlant(-3.6, 11.4);
+maakPlant(3.6, 11.4);
+
 // ---- ART ROOMS ----
 const roomDepth = 10;
 const roomWidth = 12;
@@ -587,22 +645,47 @@ function getFramePosition(kamerId, plaatsNr) {
 const audioButtons = [];
 const leesMeerButtons = [];
 
-// Hulpfunctie: maak knoppen aan voor een mesh op een gegeven positie/rotatie
-function addButtonsForMesh(mesh) {
-  // Audio knop (groen)
-  const btn = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.3, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-  );
-  btn.position.copy(mesh.position);
-  btn.rotation.copy(mesh.rotation);
-  btn.translateY(-1.0);
-  btn.translateX(0.9);
-  btn.translateZ(0.05);
-  scene.add(btn);
-  audioButtons.push({ button: btn, isPlaying: false });
+// Hulpfunctie: maak knoppen aan voor een mesh
+function addButtonsForMesh(mesh, audioPath = null) {
+  const hasAudio = audioPath && audioPath.trim() !== '';
+  
+  // Alleen audio knop als er audio is
+  if (hasAudio) {
+    const btn = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.3, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+    );
+    btn.position.copy(mesh.position);
+    btn.rotation.copy(mesh.rotation);
+    btn.translateY(-1.0);
+    btn.translateX(0.9);
+    btn.translateZ(0.05);
+    scene.add(btn);
+    
+    // Laad specifieke audio voor dit kunstwerk
+    const audioLoader = new THREE.AudioLoader();
+    const specificSound = new THREE.Audio(listener);
+    
+    // Construeer volledige URL als het een relatief pad is
+    const fullAudioUrl = audioPath.startsWith('http') ? audioPath : `${API_BASE}${audioPath}`;
+    
+    audioLoader.load(fullAudioUrl, (buffer) => {
+      specificSound.setBuffer(buffer);
+      specificSound.setLoop(false);
+      specificSound.setVolume(0.5);
+    }, undefined, (err) => {
+      console.warn('Kon audio niet laden:', fullAudioUrl, err);
+    });
+    
+    audioButtons.push({ 
+      button: btn, 
+      isPlaying: false, 
+      audio: specificSound,
+      mesh: mesh 
+    });
+  }
 
-  // Lees meer knop (blauw)
+  // Lees meer knop (altijd toevoegen als er beschrijving is, of fallback voor placeholders)
   const leesBtn = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.05),
     new THREE.MeshStandardMaterial({ color: 0x0000ff })
@@ -610,10 +693,15 @@ function addButtonsForMesh(mesh) {
   leesBtn.position.copy(mesh.position);
   leesBtn.rotation.copy(mesh.rotation);
   leesBtn.translateY(-1.0);
-  leesBtn.translateX(0.5);
+  // Als er geen audio is, zetten we de lees-meer knop meer naar rechts (centraal)
+  leesBtn.translateX(hasAudio ? 0.5 : 0.7);
   leesBtn.translateZ(0.05);
   scene.add(leesBtn);
-  leesMeerButtons.push({ button: leesBtn, data: mesh.userData });
+  
+  leesMeerButtons.push({ 
+    button: leesBtn, 
+    data: mesh.userData 
+  });
 }
 
 // ---- GRIJZE PLACEHOLDERS ----
@@ -647,11 +735,20 @@ roomPositions.forEach((kamer, i) => {
   configs.forEach(cfg => {
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 1.5),
-      new THREE.MeshStandardMaterial({ color: 0x333333 })
+      new THREE.MeshStandardMaterial({ 
+        color: 0xffffff, // Veranderd naar wit zodat de texture-kleuren straks kloppen
+        transparent: true,
+        opacity: 0 // Begint volledig transparant
+      })
     );
+    
+    // Je kunt er ook voor kiezen om de mesh volledig onzichtbaar te maken:
+    mesh.visible = false; 
+
     mesh.position.set(cfg.x, 2.5, cfg.z);
     mesh.rotation.y = cfg.rotY;
     scene.add(mesh);
+    
     kunstwerken.push({ mesh, angle: cfg.rotY });
     addButtonsForMesh(mesh);
   });
@@ -722,9 +819,8 @@ async function loadKunstwerkenFromAPI() {
         scene.add(mesh);
         kunstwerken.push({ mesh, angle: pos.rotY });
 
-        // Maak ook knoppen aan voor dit API-kunstwerk
-        addButtonsForMesh(mesh);
-        // Sync lees meer button data
+        // Maak ook knoppen aan voor dit API-kunstwerk  
+        addButtonsForMesh(mesh, kunst.Audiopath);        // Sync lees meer button data
         const lastLeesBtn = leesMeerButtons[leesMeerButtons.length - 1];
         if (lastLeesBtn) lastLeesBtn.data = mesh.userData;
       });
@@ -899,24 +995,26 @@ window.addEventListener('click', () => {
 
   // Audio check
   const audioHits = raycaster.intersectObjects(audioButtons.map(b => b.button));
-  if (audioHits.length && sound.buffer) {
+  if (audioHits.length > 0) {
     const btn = audioButtons.find(b => b.button === audioHits[0].object);
-    if (btn) {
+    if (btn && btn.audio) {
+      // Stop andere audio eerst
+      audioButtons.forEach(otherBtn => {
+        if (otherBtn.isPlaying && otherBtn !== btn) {
+          otherBtn.audio.stop();
+          otherBtn.isPlaying = false;
+          otherBtn.button.material.color.set(0x00ff00);
+        }
+      });
+      
       if (btn.isPlaying) {
-        sound.stop();
+        btn.audio.stop();
         btn.isPlaying = false;
         btn.button.material.color.set(0x00ff00);
-        currentPlaying = null;
       } else {
-        if (currentPlaying && currentPlaying !== btn) {
-          sound.stop();
-          currentPlaying.isPlaying = false;
-          currentPlaying.button.material.color.set(0x00ff00);
-        }
-        sound.play();
+        btn.audio.play();
         btn.isPlaying = true;
         btn.button.material.color.set(0xff0000);
-        currentPlaying = btn;
       }
       return;
     }
@@ -1031,75 +1129,54 @@ function insidePentagon(x, z, margin = 0.3) {
 // ---- HELP KNOP & INSTRUCTIES ----
 const helpKnop = document.createElement('div');
 helpKnop.innerHTML = "?";
-helpKnop.style.cssText = "position:fixed; bottom:20px; right:20px; width:40px; height:40px; background:#995F2F; color:#fff8f0; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:4000; font-family:sans-serif; border:1px solid #d4a842; box-shadow:0px 2px 8px rgba(0,0,0,0.3); font-size:18px;";
+helpKnop.style.cssText = "position:fixed; bottom:20px; right:20px; width:40px; height:40px; background:#444; color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:4000; font-family:sans-serif; border:none; box-shadow: 0px 2px 5px rgba(0,0,0,0.3);";
 document.body.appendChild(helpKnop);
 
 const infoScherm = document.createElement('div');
-infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif;";
+infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.7); color:white; display:none; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif; cursor:pointer;";
 
 const isMobiel = "ontouchstart" in window;
 
-// Helper functie om herhaling in de lijst-items te voorkomen
-const maakItem = (num, titel, desc, border = true) => `
-  <div style="display:flex; align-items:center; gap:14px; padding:13px 0; ${border ? 'border-bottom:1px solid #e0cdb0;' : ''}">
-    <div style="width:30px; height:30px; border-radius:50%; background:#7a3a1a; color:#fdecc8; font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${num}</div>
-    <div><div style="color:#3a2010; font-size:13px; font-weight:500;">${titel}</div><div style="color:#907050; font-size:12px; margin-top:2px;">${desc}</div></div>
-  </div>
-`;
-
 infoScherm.innerHTML = `
-  <div style="display:flex; border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4); width:540px; max-width:95vw;" onclick="event.stopPropagation()">
-    
-    <div style="width:200px; flex-shrink:0; background:#7a3a1a; padding:32px 22px; display:flex; flex-direction:column; justify-content:space-between; border-right:1px solid #c08040;">
-      <div>
-        <div style="width:44px; height:44px; border-radius:10px; background:#a04020; display:flex; align-items:center; justify-content:center; margin-bottom:20px; border:1px solid #e0b060;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f5d080" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-        </div>
-        <h2 style="color:#fdecc8; font-size:18px; font-weight:500; margin:0 0 12px;">VR Museum</h2>
-        <p style="color:#e8c898; font-size:13px; line-height:1.7; margin:0;">Een virtuele galerie over queer identiteit, geschiedenis en zelfexpressie.</p>
-      </div>
-      <span style="display:inline-block; background:rgba(255,220,150,0.2); color:#f5d080; font-size:10px; padding:5px 12px; border-radius:20px; letter-spacing:1px; text-transform:uppercase; margin-top:28px; border:1px solid rgba(255,220,150,0.35); width:fit-content;">Welkom</span>
+  <div style="padding:25px; background:white; color:black; border-radius:8px; text-align:center; width:280px; box-shadow: 0px 4px 15px rgba(0,0,0,0.5);">
+    <h3 style="margin-top:0;">Besturing voor VR museum</h3>
+    <div style="margin:15px 0; font-size:14px; line-height:1.5; text-align:left;">
+      ${isMobiel ?
+        "• Swipe om rond te kijken<br>• Tik op schilderij voor info" :
+        "• Lopen: WASD <br>• Kijken: Muis<br>• Klik op schilderij voor info<br>• Scroll om in/uit te zoomen"}
     </div>
-
-    <div style="flex:1; background:#f5ede0; padding:32px 26px; display:flex; flex-direction:column; justify-content:space-between;">
-      <div style="font-size:11px; color:#a07040; letter-spacing:1px; text-transform:uppercase; margin-bottom:18px; font-weight:500;">Hoe te navigeren</div>
-      
-      <div style="display:flex; flex-direction:column; flex:1;">
-        ${isMobiel ? `
-          ${maakItem(1, "Rondkijken", "Swipe over het scherm")}
-          ${maakItem(2, "Kunstwerk bekijken", "Tik op het kunstwerk", false)}
-        ` : `
-          ${maakItem(1, "Lopen", "Gebruik de W A S D toetsen")}
-          ${maakItem(2, "Rondkijken", "Beweeg de muis")}
-          ${maakItem(3, "Kunstwerk bekijken", "Klik erop")}
-          ${maakItem(4, "Inzoomen", "Gebruik het scrollwiel", false)}
-        `}
-      </div>
-
-      <button id="startKnop" style="background:#7a3a1a; color:#fdecc8; border:none; padding:13px 0; width:100%; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; letter-spacing:1px; margin-top:20px;">Betreed het museum</button>
-    </div>
-
+    <button style="padding:10px 20px; background:#333; color:white; border:none; border-radius:4px; cursor:pointer; width:100%;">Start</button>
   </div>
 `;
 document.body.appendChild(infoScherm);
 
 function startMuseum() {
   infoScherm.style.display = "none";
-  if (!isMobiel && typeof canvas !== 'undefined') canvas.requestPointerLock();
+  if (!isMobiel && typeof canvas !== 'undefined') {
+    canvas.requestPointerLock();
+  }
 }
 
-function toonGids() { infoScherm.style.display = "flex"; }
+function toonGids() {
+  infoScherm.style.display = "flex";
+}
 
 infoScherm.onclick = startMuseum;
-infoScherm.querySelector('#startKnop').onclick = startMuseum;
-helpKnop.onclick = (e) => { e.stopPropagation(); toonGids(); };
+
+helpKnop.onclick = function(e) {
+  e.stopPropagation();
+  toonGids();
+};
 
 let museumGestart = false;
 
 document.addEventListener('pointerlockchange', function() {
   const popupOpen = document.querySelector('#kaart') !== null;
-  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) toonGids();
+  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) {
+    toonGids();
+  }
 });
+
 // ---- JOYSTICK ----
 function initJoystick({ camera, joystickEl, isMobile }) {
   if (!joystickEl) {

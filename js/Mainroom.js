@@ -420,6 +420,18 @@ function animateDoors(open) {
   if (animatingDoors) return;
   animatingDoors = true;
 
+// Schuifdeur geluid
+  
+  let audio = document.querySelector(".schuifDeurGeluid");
+  setTimeout(function(){
+    audio.play();
+
+    setTimeout(function(){
+        audio.pause();
+        audio.currentTime = 0;
+    }, 2000);
+}, 0);
+
   const start = performance.now();
 
   function loop(now) {
@@ -1070,44 +1082,82 @@ function updateMovement() {
   camera.rotation.x = look.pitch;
 }
 
-function isAllowed(x, z) {
-  const inGang = x > -2.9 && x < 2.9 && z > 12 && z < 22;
-  const inHal = insidePentagon(x, z);
+// ---- MOVEMENT ----
+function updateMovement() {
+  const forward = new THREE.Vector3(-Math.sin(look.yaw), 0, -Math.cos(look.yaw));
+  const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
 
-  let inRoom = false;
-  roomPositions.forEach((r, i) => {
+  const nextX = camera.position.clone();
+  const nextZ = camera.position.clone();
+
+  if (keys['KeyW']) { nextX.addScaledVector(forward, speed); nextZ.addScaledVector(forward, speed); }
+  if (keys['KeyS']) { nextX.addScaledVector(forward, -speed); nextZ.addScaledVector(forward, -speed); }
+  if (keys['KeyA']) { nextX.addScaledVector(right, -speed); nextZ.addScaledVector(right, -speed); }
+  if (keys['KeyD']) { nextX.addScaledVector(right, speed); nextZ.addScaledVector(right, speed); }
+
+  // Probeer X en Z apart — zo kun je langs muren schuiven
+  const tryX = camera.position.clone();
+  tryX.x = nextX.x;
+  const tryZ = camera.position.clone();
+  tryZ.z = nextZ.z;
+
+  if (isAllowed(tryX.x, tryX.z)) camera.position.x = tryX.x;
+  if (isAllowed(tryZ.x, tryZ.z)) camera.position.z = tryZ.z;
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = look.yaw;
+  camera.rotation.x = look.pitch;
+}
+
+function isAllowed(x, z) {
+  const margin = 0.3; // speler-radius — één getal, makkelijk aan te passen
+
+  // Entreegang
+  if (x > -3 + margin && x < 3 - margin && z > 12 && z < 22) return true;
+
+  // Hoofdhal (pentagon), met doorloop naar kamers bij elke opening
+  if (insidePentagon(x, z, margin)) return true;
+
+  // Kamers
+  for (let i = 0; i < roomPositions.length; i++) {
+    const r = roomPositions[i];
     const angle = doors[i].wallAngle;
     const dx = x - r.rx;
     const dz = z - r.rz;
     const localX =  dx * Math.cos(angle) - dz * Math.sin(angle);
     const localZ =  dx * Math.sin(angle) + dz * Math.cos(angle);
-    const halfWidth = roomWidth / 2 - 0.4;
-    const halfDepth = roomDepth / 2 + 1.5;
-    if (localX > -halfWidth && localX < halfWidth && localZ > -halfDepth && localZ < halfDepth) {
-      inRoom = true;
-    }
-  });
 
-  return inGang || inHal || inRoom;
+    const hw = roomWidth  / 2 - 0.8;
+    const hd = roomDepth  / 2 + 1.5; // +1.5 laat je door de deuropening lopen
+
+    if (localX > -hw && localX < hw && localZ > -hd && localZ < hd) return true;
+  }
+
+  return false;
 }
 
-function insidePentagon(x, z) {
+function insidePentagon(x, z, margin = 0.3) {
   for (let i = 0; i < sides; i++) {
-    if (i === 2) continue;
     const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
     const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
     const x1 = Math.cos(angle1) * radius;
     const z1 = Math.sin(angle1) * radius;
     const x2 = Math.cos(angle2) * radius;
     const z2 = Math.sin(angle2) * radius;
+
+    // Normaalvector naar binnen
     const nx = -(z2 - z1);
-    const nz = x2 - x1;
-    const dot = (x - x1) * nx + (z - z1) * nz;
-    if (dot < 0.3) return false;
+    const nz =  (x2 - x1);
+    const len = Math.sqrt(nx * nx + nz * nz);
+
+    const dot = ((x - x1) * nx + (z - z1) * nz) / len;
+
+    // Zijde 2 is de gang-opening: ruimere drempel zodat je erdoor kunt
+    const threshold = (i === 2) ? -openingWidth / 2 : margin;
+    if (dot < threshold) return false;
   }
   return true;
 }
-
 // ---- HELP KNOP & INSTRUCTIES ----
 const helpKnop = document.createElement('div');
 helpKnop.innerHTML = "?";

@@ -189,8 +189,9 @@ for (let i = 0; i < sides; i++) {
 }
 
 // ---- BORDJES HOOFDHAL ----
-const kamerNamen = ['Kamer 1', 'Kamer 2', 'Kamer 3', 'Kamer 4'];
+const kamerNamen = ['Laden...', 'Laden...', 'Laden...', 'Laden...']; // Tijdelijke tekst
 let kamerIndex = 0;
+const signPlates = []; // Array om de bordjes in op te slaan voor later
 
 for (let i = 0; i < sides; i++) {
   if (i === 2) continue;
@@ -209,18 +210,13 @@ for (let i = 0; i < sides; i++) {
 
   const offsetX = kamerIndex < 3 ? -2.5 : 2;
 
+  // Maak canvas
   const signCanvas = document.createElement('canvas');
   signCanvas.width = 1024;
   signCanvas.height = 512;
-  const ctx = signCanvas.getContext('2d');
-
-  ctx.fillStyle = '#995F2F';
-  ctx.fillRect(0, 0, 1024, 512);
-  ctx.fillStyle = '#000000';
-  ctx.font = 'Bold 220px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(kamerNamen[kamerIndex], 512, 256);
+  
+  // Teken initiële tekst
+  tekenBordje(signCanvas, kamerNamen[kamerIndex]);
 
   const signFrame = new THREE.Mesh(
     new THREE.BoxGeometry(1.2, 0.7, 0.04),
@@ -245,7 +241,20 @@ for (let i = 0; i < sides; i++) {
   signPlate.translateX(offsetX);
   scene.add(signPlate);
 
+  signPlates.push(signPlate); // Sla op in array
   kamerIndex++;
+}
+
+// Hulpfunctie om de tekst op het canvas te tekenen
+function tekenBordje(canvas, tekst) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#995F2F'; // Houtkleur
+    ctx.fillRect(0, 0, 1024, 512);
+    ctx.fillStyle = '#000000';
+    ctx.font = 'Bold 140px Arial'; // Iets kleiner font voor lange namen
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tekst, 512, 256);
 }
 
 // ---- PLAFOND ----
@@ -664,10 +673,13 @@ function addButtonsForMesh(mesh, audioPath = null) {
     
     // Laad specifieke audio voor dit kunstwerk
     const audioLoader = new THREE.AudioLoader();
+    audioLoader.setCrossOrigin('anonymous'); 
     const specificSound = new THREE.Audio(listener);
     
     // Construeer volledige URL als het een relatief pad is
-    const fullAudioUrl = audioPath.startsWith('http') ? audioPath : `${API_BASE}${audioPath}`;
+    const fullAudioUrl = audioPath.startsWith('http') 
+      ? audioPath 
+      : `${API_BASE}/index.php${audioPath.startsWith('/') ? '' : '/'}${audioPath}`;
     
     audioLoader.load(fullAudioUrl, (buffer) => {
       specificSound.setBuffer(buffer);
@@ -768,15 +780,30 @@ kunstwerken.forEach((k, i) => {
 // ---- API KUNSTWERKEN LADEN ----
 const API_BASE = 'http://10.120.5.132:8000';
 
+// ---- API DATA LADEN ----
 async function loadKunstwerkenFromAPI() {
   try {
-    const [resKunst, resFrames] = await Promise.all([
+    // 1. Haal Kunstwerken, Frames én Kamers op
+    const [resKunst, resFrames, resKamers] = await Promise.all([
       fetch(`${API_BASE}/`),
-      fetch(`${API_BASE}/frames`)
+      fetch(`${API_BASE}/frames`),
+      fetch(`${API_BASE}/kamers`)
     ]);
+    
     const kunstData  = await resKunst.json();
     const framesData = await resFrames.json();
+    const kamersData = await resKamers.json();
 
+    // ---- UPDATE DE BORDJES ----
+    kamersData.forEach((kamer, i) => {
+        if (signPlates[i]) {
+            const canvas = signPlates[i].material.map.image; // Pak het bestaande canvas
+            tekenBordje(canvas, kamer.Naam); // Teken de nieuwe naam erop
+            signPlates[i].material.map.needsUpdate = true; // Vertel Three.js dat de texture is veranderd
+        }
+    });
+
+    // ---- REST VAN JE BESTAANDE KUNSTWERK CODE ----
     const frameMap = {};
     framesData.forEach(f => {
       frameMap[f.FramePlaatsId] = { kamerId: f.KamerId, plaatsNr: f.PlaatsNr };
@@ -786,48 +813,41 @@ async function loadKunstwerkenFromAPI() {
     artLoader.crossOrigin = 'anonymous';
 
     kunstData.forEach(kunst => {
-      if (!kunst.ImageUrl || !kunst.FramePlaatsId) return;
-      const frameInfo = frameMap[kunst.FramePlaatsId];
-      if (!frameInfo) return;
+        // ... (je bestaande code om schilderijen te plaatsen) ...
+        if (!kunst.ImageUrl || !kunst.FramePlaatsId) return;
+        const frameInfo = frameMap[kunst.FramePlaatsId];
+        if (!frameInfo) return;
 
-      const pos = getFramePosition(frameInfo.kamerId, frameInfo.plaatsNr);
-      if (!pos) return;
+        const pos = getFramePosition(frameInfo.kamerId, frameInfo.plaatsNr);
+        if (!pos) return;
 
-      const fileName = kunst.ImageUrl.substring(kunst.ImageUrl.lastIndexOf('/') + 1);
-      const fullImageUrl = `${API_BASE}/index.php/uploads/${fileName}`;
+        const fileName = kunst.ImageUrl.substring(kunst.ImageUrl.lastIndexOf('/') + 1);
+        const fullImageUrl = `${API_BASE}/index.php/uploads/${fileName}`;
 
-      artLoader.load(fullImageUrl, (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
+        artLoader.load(fullImageUrl, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            const aspect = tex.image.width / tex.image.height;
+            const artW = aspect >= 1 ? 2 : 2 * aspect;
+            const artH = aspect >= 1 ? 2 / aspect : 2;
 
-        const w = tex.image?.width || 1;
-        const h = tex.image?.height || 1;
-        const aspect = w / h;
-        const artW = aspect >= 1 ? 2 : 2 * aspect;
-        const artH = aspect >= 1 ? 2 / aspect : 2;
-
-        const mesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(artW, artH),
-          new THREE.MeshStandardMaterial({ map: tex })
-        );
-        mesh.position.set(pos.x, pos.y, pos.z);
-        mesh.rotation.y = pos.rotY;
-        mesh.userData = {
-          titel: kunst.Naam || 'Naamloos',
-          tekst: kunst.Beschrijving || '',
-          auteur: kunst.Auteur || '',
-        };
-        scene.add(mesh);
-        kunstwerken.push({ mesh, angle: pos.rotY });
-
-        // Maak ook knoppen aan voor dit API-kunstwerk  
-        addButtonsForMesh(mesh, kunst.Audiopath);        // Sync lees meer button data
-        const lastLeesBtn = leesMeerButtons[leesMeerButtons.length - 1];
-        if (lastLeesBtn) lastLeesBtn.data = mesh.userData;
-      });
+            const mesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(artW, artH),
+                new THREE.MeshStandardMaterial({ map: tex })
+            );
+            mesh.position.set(pos.x, pos.y, pos.z);
+            mesh.rotation.y = pos.rotY;
+            mesh.userData = {
+                titel: kunst.Naam || 'Naamloos',
+                tekst: kunst.Beschrijving || '',
+                auteur: kunst.Auteur || '',
+            };
+            scene.add(mesh);
+            addButtonsForMesh(mesh, kunst.Audiopath);
+        });
     });
 
   } catch (e) {
-    console.warn('Kon kunstwerken niet laden:', e);
+    console.warn('Kon data niet laden van API:', e);
   }
 }
 

@@ -1,5 +1,6 @@
 const audioButtons = [];
 const audioLoader = new THREE.AudioLoader();
+audioLoader.setCrossOrigin('anonymous'); 
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
@@ -240,9 +241,9 @@ async function loadKunstwerkenFromAPI() {
                 // BELANGRIJK: Maak audio knop als er audio is
                 if (kunt.Audiopath && kunst.Audiopath.trim() !== '') {
                     const audioFileName = kunst.Audiopath.substring(kunst.Audiopath.lastIndexOf('/') + 1);
-                    const fullAudioUrl = kunst.Audiopath.startsWith('http') 
-                        ? kunst.Audiopath 
-                        : `${API_BASE}/uploads/${audioFileName}`;
+                    const fullAudioUrl = audioPath.startsWith('http') 
+                        ? kunst.audioPath 
+                        : `${API_BASE}/index.php${audioPath.startsWith('/') ? '' : '/'}${audioPath}`;
                     
                     createAudioButton(mesh, fullAudioUrl);
                 }

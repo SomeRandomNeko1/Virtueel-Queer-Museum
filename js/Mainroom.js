@@ -420,18 +420,6 @@ function animateDoors(open) {
   if (animatingDoors) return;
   animatingDoors = true;
 
-// Schuifdeur geluid
-  
-  let audio = document.querySelector(".schuifDeurGeluid");
-  setTimeout(function(){
-    audio.play();
-
-    setTimeout(function(){
-        audio.pause();
-        audio.currentTime = 0;
-    }, 2000);
-}, 0);
-
   const start = performance.now();
 
   function loop(now) {
@@ -728,66 +716,6 @@ function addButtonsForMesh(mesh, audioPath = null) {
   });
 }
 
-// ---- GRIJZE PLACEHOLDERS ----
-const kunstwerken = [];
-
-roomPositions.forEach((kamer, i) => {
-  const angle = doors[i].wallAngle;
-  const wx = Math.sin(angle);
-  const wz = Math.cos(angle);
-  const px = Math.cos(angle);
-  const pz = -Math.sin(angle);
-
-  const configs = [
-    ...[-2.5, 0, 2.5].map(o => ({
-      x: kamer.rx + wx * (roomDepth / 2 - 9) + px * o,
-      z: kamer.rz + wz * (roomDepth / 2 - 9) + pz * o,
-      rotY: angle
-    })),
-    ...[-2.5, 0, 2.5].map(o => ({
-      x: kamer.rx + px * (roomWidth / 2 - 0.1) + wx * o,
-      z: kamer.rz + pz * (roomWidth / 2 - 0.1) + wz * o,
-      rotY: angle - Math.PI / 2
-    })),
-    ...[-2.5, 0, 2.5].map(o => ({
-      x: kamer.rx - px * (roomWidth / 2 - 0.1) + wx * o,
-      z: kamer.rz - pz * (roomWidth / 2 - 0.1) + wz * o,
-      rotY: angle + Math.PI / 2
-    })),
-  ];
-
-  configs.forEach(cfg => {
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 1.5),
-      new THREE.MeshStandardMaterial({ 
-        color: 0xffffff, // Veranderd naar wit zodat de texture-kleuren straks kloppen
-        transparent: true,
-        opacity: 0 // Begint volledig transparant
-      })
-    );
-    
-    // Je kunt er ook voor kiezen om de mesh volledig onzichtbaar te maken:
-    mesh.visible = false; 
-
-    mesh.position.set(cfg.x, 2.5, cfg.z);
-    mesh.rotation.y = cfg.rotY;
-    scene.add(mesh);
-    
-    kunstwerken.push({ mesh, angle: cfg.rotY });
-    addButtonsForMesh(mesh);
-  });
-});
-
-// ---- STATISCHE INFO DATA (fallback voor placeholders) ----
-const infoData = [
-  { titel: "Identiteit", tekst: "Dit werk verkent gender en zelfexpressie binnen de queer gemeenschap." },
-  { titel: "Geschiedenis", tekst: "Een eerbetoon aan de voorvechters van gelijkheid." },
-  { titel: "Toekomst", tekst: "Samen bouwen we aan een inclusieve wereld." }
-];
-
-kunstwerken.forEach((k, i) => {
-  k.mesh.userData = infoData[i % infoData.length];
-});
 
 // ---- API KUNSTWERKEN LADEN ----
 const API_BASE = 'http://10.120.5.132:8000';
@@ -833,29 +761,39 @@ async function loadKunstwerkenFromAPI() {
         const pos = getFramePosition(frameInfo.kamerId, frameInfo.plaatsNr);
         if (!pos) return;
 
-        const fileName = kunst.ImageUrl.substring(kunst.ImageUrl.lastIndexOf('/') + 1);
-        const fullImageUrl = `${API_BASE}/index.php/uploads/${fileName}`;
+        const fullImageUrl = kunst.ImageUrl;
+
 
         artLoader.load(fullImageUrl, (tex) => {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            const aspect = tex.image.width / tex.image.height;
-            const artW = aspect >= 1 ? 2 : 2 * aspect;
-            const artH = aspect >= 1 ? 2 / aspect : 2;
+          tex.colorSpace = THREE.SRGBColorSpace;
+          const aspect = tex.image.width / tex.image.height;
+          const artW = aspect >= 1 ? 2 : 2 * aspect;
+          const artH = aspect >= 1 ? 2 / aspect : 2;
 
-            const mesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(artW, artH),
-                new THREE.MeshStandardMaterial({ map: tex })
-            );
-            mesh.position.set(pos.x, pos.y, pos.z);
-            mesh.rotation.y = pos.rotY;
-            mesh.userData = {
-                titel: kunst.Naam || 'Naamloos',
-                tekst: kunst.Beschrijving || '',
-                auteur: kunst.Auteur || '',
-            };
-            scene.add(mesh);
-            addButtonsForMesh(mesh, kunst.Audiopath);
-        });
+          const mesh = new THREE.Mesh(
+              new THREE.PlaneGeometry(artW, artH),
+              new THREE.MeshStandardMaterial({ map: tex })
+          );
+          mesh.position.set(pos.x, pos.y, pos.z);
+          mesh.rotation.y = pos.rotY;
+
+          // ← userData HIER zetten, niet erna
+          mesh.userData = {
+              titel:  kunst.Naam         || 'Naamloos',
+              tekst:  kunst.Beschrijving || '',
+              auteur: kunst.Auteur       || '',
+              imageUrl: fullImageUrl,
+          };
+
+          scene.add(mesh);
+          const placeholder = kunstwerken.find(k => 
+              k.mesh.position.distanceTo(mesh.position) < 1.0
+          );
+          if (placeholder) {
+              placeholder.mesh.visible = false;
+          }
+          addButtonsForMesh(mesh, kunst.Audiopath);
+      });
     });
 
   } catch (e) {
@@ -964,9 +902,10 @@ function toonInfo(data) {
       color:white;
     ">
       <div style="flex:1;">
-        <div style="width:100%; aspect-ratio:4/3; background:#eee; border:1px solid #ccc; display:flex; justify-content:center; align-items:center; font-weight:bold; color:#666;">
-          ${title}
-        </div>
+        ${data.imageUrl
+          ? `<img src="${data.imageUrl}" style="width:100%; aspect-ratio:4/3; object-fit:contain; background:#111; border-radius:4px;" />`
+          : `<div style="width:100%; aspect-ratio:4/3; background:#eee; display:flex; justify-content:center; align-items:center; color:#666; font-weight:bold;">Geen afbeelding</div>`
+        }
       </div>
       <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
         <div>
@@ -1060,7 +999,6 @@ window.addEventListener('click', () => {
   }
 });
 
-// ---- MOVEMENT ----
 function updateMovement() {
   const forward = new THREE.Vector3(-Math.sin(look.yaw), 0, -Math.cos(look.yaw));
   const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
@@ -1072,8 +1010,14 @@ function updateMovement() {
   if (keys['KeyA']) next.addScaledVector(right, -speed);
   if (keys['KeyD']) next.addScaledVector(right, speed);
 
+  // Eerst probeer volledige beweging, dan X-only, dan Z-only
+  // Zo kun je langs muren schuiven maar niet door hoeken
   if (isAllowed(next.x, next.z)) {
     camera.position.x = next.x;
+    camera.position.z = next.z;
+  } else if (isAllowed(next.x, camera.position.z)) {
+    camera.position.x = next.x;
+  } else if (isAllowed(camera.position.x, next.z)) {
     camera.position.z = next.z;
   }
 
@@ -1082,40 +1026,13 @@ function updateMovement() {
   camera.rotation.x = look.pitch;
 }
 
-// ---- MOVEMENT ----
-function updateMovement() {
-  const forward = new THREE.Vector3(-Math.sin(look.yaw), 0, -Math.cos(look.yaw));
-  const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
-
-  const nextX = camera.position.clone();
-  const nextZ = camera.position.clone();
-
-  if (keys['KeyW']) { nextX.addScaledVector(forward, speed); nextZ.addScaledVector(forward, speed); }
-  if (keys['KeyS']) { nextX.addScaledVector(forward, -speed); nextZ.addScaledVector(forward, -speed); }
-  if (keys['KeyA']) { nextX.addScaledVector(right, -speed); nextZ.addScaledVector(right, -speed); }
-  if (keys['KeyD']) { nextX.addScaledVector(right, speed); nextZ.addScaledVector(right, speed); }
-
-  // Probeer X en Z apart — zo kun je langs muren schuiven
-  const tryX = camera.position.clone();
-  tryX.x = nextX.x;
-  const tryZ = camera.position.clone();
-  tryZ.z = nextZ.z;
-
-  if (isAllowed(tryX.x, tryX.z)) camera.position.x = tryX.x;
-  if (isAllowed(tryZ.x, tryZ.z)) camera.position.z = tryZ.z;
-
-  camera.rotation.order = 'YXZ';
-  camera.rotation.y = look.yaw;
-  camera.rotation.x = look.pitch;
-}
-
 function isAllowed(x, z) {
-  const margin = 0.3; // speler-radius — één getal, makkelijk aan te passen
+  const margin = 0.4;
 
   // Entreegang
   if (x > -3 + margin && x < 3 - margin && z > 12 && z < 22) return true;
 
-  // Hoofdhal (pentagon), met doorloop naar kamers bij elke opening
+  // Hoofdhal pentagon
   if (insidePentagon(x, z, margin)) return true;
 
   // Kamers
@@ -1124,19 +1041,20 @@ function isAllowed(x, z) {
     const angle = doors[i].wallAngle;
     const dx = x - r.rx;
     const dz = z - r.rz;
-    const localX =  dx * Math.cos(angle) - dz * Math.sin(angle);
-    const localZ =  dx * Math.sin(angle) + dz * Math.cos(angle);
-
-    const hw = roomWidth  / 2 - 0.8;
-    const hd = roomDepth  / 2 + 1.5; // +1.5 laat je door de deuropening lopen
-
-    if (localX > -hw && localX < hw && localZ > -hd && localZ < hd) return true;
+    const localX = dx * Math.cos(angle) - dz * Math.sin(angle);
+    const localZ = dx * Math.sin(angle) + dz * Math.cos(angle);
+    if (
+      localX > -roomWidth / 2 + margin &&
+      localX <  roomWidth / 2 - margin &&
+      localZ > -roomDepth / 2 + margin &&
+      localZ <  roomDepth / 2 + 1.5
+    ) return true;
   }
 
   return false;
 }
 
-function insidePentagon(x, z, margin = 0.3) {
+function insidePentagon(x, z, margin = 0.4) {
   for (let i = 0; i < sides; i++) {
     const angle1 = (i / sides) * Math.PI * 2 - Math.PI / 2;
     const angle2 = ((i + 1) / sides) * Math.PI * 2 - Math.PI / 2;
@@ -1144,20 +1062,17 @@ function insidePentagon(x, z, margin = 0.3) {
     const z1 = Math.sin(angle1) * radius;
     const x2 = Math.cos(angle2) * radius;
     const z2 = Math.sin(angle2) * radius;
-
-    // Normaalvector naar binnen
     const nx = -(z2 - z1);
-    const nz =  (x2 - x1);
+    const nz =   x2 - x1;
     const len = Math.sqrt(nx * nx + nz * nz);
-
     const dot = ((x - x1) * nx + (z - z1) * nz) / len;
-
-    // Zijde 2 is de gang-opening: ruimere drempel zodat je erdoor kunt
+    // Zijde 2 = gang-opening, ruimere drempel zodat je erdoor kunt
     const threshold = (i === 2) ? -openingWidth / 2 : margin;
     if (dot < threshold) return false;
   }
   return true;
 }
+
 // ---- HELP KNOP & INSTRUCTIES ----
 const helpKnop = document.createElement('div');
 helpKnop.innerHTML = "?";

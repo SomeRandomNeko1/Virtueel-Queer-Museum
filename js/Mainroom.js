@@ -786,12 +786,6 @@ async function loadKunstwerkenFromAPI() {
           };
 
           scene.add(mesh);
-          const placeholder = kunstwerken.find(k => 
-              k.mesh.position.distanceTo(mesh.position) < 1.0
-          );
-          if (placeholder) {
-              placeholder.mesh.visible = false;
-          }
           addButtonsForMesh(mesh, kunst.Audiopath);
       });
     });

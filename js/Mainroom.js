@@ -1074,32 +1074,42 @@ function insidePentagon(x, z, margin = 0.4) {
 }
 
 
-// ---- HELP KNOP & INSTRUCTIES ----
-const helpKnop = document.createElement('div');
-helpKnop.innerHTML = "?";
-helpKnop.style.cssText = "position:fixed; bottom:20px; right:20px; width:40px; height:40px; background:#444; color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:4000; font-family:sans-serif; border:none; box-shadow: 0px 2px 5px rgba(0,0,0,0.3);";
-document.body.appendChild(helpKnop);
-
+// ---- INSTRUCTIES POPUP ----
 const infoScherm = document.createElement('div');
 infoScherm.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.7); color:white; display:none; justify-content:center; align-items:center; z-index:5000; font-family:sans-serif; cursor:pointer;";
 
 const isMobiel = "ontouchstart" in window;
 
+// Popup is 400px breed met extra uitleg
 infoScherm.innerHTML = `
-  <div style="padding:25px; background:white; color:black; border-radius:8px; text-align:center; width:280px; box-shadow: 0px 4px 15px rgba(0,0,0,0.5);">
-    <h3 style="margin-top:0;">Besturing voor VR museum</h3>
-    <div style="margin:15px 0; font-size:14px; line-height:1.5; text-align:left;">
+  <div style="padding:30px; background:white; color:black; border-radius:12px; text-align:center; width:400px; max-width:90%; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); cursor:default;">
+    <h3 style="margin-top:0; font-size:22px; color:#222;">Instructies VR museum</h3>
+    
+    <div style="margin:20px 0; font-size:15px; line-height:1.6; text-align:left; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+      <strong style="color:#555;">Navigatie:</strong><br>
       ${isMobiel ?
-        "• Swipe om rond te kijken<br>• Tik op schilderij voor info" :
-        "• Lopen: WASD <br>• Kijken: Muis<br>• Klik op schilderij voor info<br>• Scroll om in/uit te zoomen"}
+        "• Swipe over het scherm om rond te kijken<br>• Tik op een schilderij voor details" :
+        "• <strong>W, A, S, D</strong> of pijltjestoetsen om te lopen<br>• <strong>Muis</strong> om vrij rond te kijken<br>• <strong>Klik</strong> op een schilderij voor extra informatie<br>• <strong>Scroll</strong> om in of uit te zoomen"}
     </div>
-    <button style="padding:10px 20px; background:#333; color:white; border:none; border-radius:4px; cursor:pointer; width:100%;">Start</button>
+
+    <div style="margin:15px 0; font-size:14px; line-height:1.5; text-align:left; background:#f5f5f5; padding:10px; border-radius:6px;">
+      <strong style="color:#555;">Extra functies:</strong><br>
+      • Druk op <kbd style="background:#e0e0e0; padding:2px 5px; border-radius:3px; font-family:monospace;">Esc</kbd> om de muis te bevrijden of terug te keren naar de Home page.
+    </div>
+
+    <button id="startMuseumBtn" style="padding:12px 20px; background:#333; color:white; border:none; border-radius:6px; cursor:pointer; width:100%; font-size:16px; margin-top:10px;">Start de ervaring</button>
   </div>
 `;
 document.body.appendChild(infoScherm);
 
+// Voorkom dat klikken BINNEN de witte popup de boel sluit
+infoScherm.querySelector('div').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
 function startMuseum() {
   infoScherm.style.display = "none";
+  museumGestart = true;
   if (!isMobiel && typeof canvas !== 'undefined') {
     canvas.requestPointerLock();
   }
@@ -1109,12 +1119,9 @@ function toonGids() {
   infoScherm.style.display = "flex";
 }
 
+// Klikken op de knop of de donkere achtergrond sluit de popup
+document.getElementById('startMuseumBtn').onclick = startMuseum;
 infoScherm.onclick = startMuseum;
-
-helpKnop.onclick = function(e) {
-  e.stopPropagation();
-  toonGids();
-};
 
 let museumGestart = false;
 
@@ -1122,6 +1129,15 @@ document.addEventListener('pointerlockchange', function() {
   const popupOpen = document.querySelector('#kaart') !== null;
   if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) {
     toonGids();
+  }
+});
+
+// ---- ESCAPE NAAR HOME PAGE FUNCTIONALITEIT ----
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape' || event.keyCode === 27) {
+    if (document.pointerLockElement === null || isMobiel) {
+      window.location.href = "index.html"; // Pas dit aan naar jouw home page URL
+    }
   }
 });
 

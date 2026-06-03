@@ -290,7 +290,7 @@ const gangFloorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
 
 const gangFloor = new THREE.Mesh(new THREE.PlaneGeometry(6, 10), gangFloorMat);
 gangFloor.rotation.x = -Math.PI / 2;
-gangFloor.position.set(0, 0.01, 17);
+gangFloor.position.set(0, 0.01, 17.2);
 scene.add(gangFloor);
 
 const gangCeil = new THREE.Mesh(
@@ -298,17 +298,17 @@ const gangCeil = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: 0xF0EAD6 })
 );
 gangCeil.rotation.x = Math.PI / 2;
-gangCeil.position.set(0, wallHeight, 17);
+gangCeil.position.set(0, wallHeight, 17.2);
 scene.add(gangCeil);
 
 const gangLeft = new THREE.Mesh(new THREE.PlaneGeometry(10, wallHeight), gangMat);
 gangLeft.rotation.y = Math.PI / 2;
-gangLeft.position.set(-3, wallHeight / 2, 17);
+gangLeft.position.set(-3, wallHeight / 2, 17.2);
 scene.add(gangLeft);
 
 const gangRight = new THREE.Mesh(new THREE.PlaneGeometry(10, wallHeight), gangMat);
 gangRight.rotation.y = -Math.PI / 2;
-gangRight.position.set(3, wallHeight / 2, 17);
+gangRight.position.set(3, wallHeight / 2, 17.2);
 scene.add(gangRight);
 
 const gangBack = new THREE.Mesh(new THREE.PlaneGeometry(6, wallHeight), gangMat);
@@ -1029,8 +1029,8 @@ function updateMovement() {
 function isAllowed(x, z) {
   const margin = 0.4;
 
-  // Entreegang
-  if (x > -3 + margin && x < 3 - margin && z > 12 && z < 22) return true;
+  // Entreegang — strakker begrensd
+  if (x > -3 + margin && x < 3 - margin && z > 11.5 && z < 22) return true;
 
   // Hoofdhal pentagon
   if (insidePentagon(x, z, margin)) return true;
@@ -1066,12 +1066,19 @@ function insidePentagon(x, z, margin = 0.4) {
     const nz =   x2 - x1;
     const len = Math.sqrt(nx * nx + nz * nz);
     const dot = ((x - x1) * nx + (z - z1) * nz) / len;
-    // Zijde 2 = gang-opening, ruimere drempel zodat je erdoor kunt
-    const threshold = (i === 2) ? -openingWidth / 2 : margin;
-    if (dot < threshold) return false;
+
+    if (i === 2) {
+      // Gangzijde: alleen doorgang toestaan als x binnen de deuropening valt
+      const withinOpening = Math.abs(x) < openingWidth / 2 - margin;
+      if (!withinOpening && dot < margin) return false;
+      if (withinOpening && dot < -openingWidth / 2) return false;
+    } else {
+      if (dot < margin) return false;
+    }
   }
   return true;
 }
+
 
 // ---- HELP KNOP & INSTRUCTIES ----
 const helpKnop = document.createElement('div');

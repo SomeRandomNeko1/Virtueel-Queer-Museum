@@ -20,12 +20,12 @@ let globalAudio = null;
 let audioContextInitialized = false;
 
 function initAudioContext() {
-    if (audioContextInitialized) return;
-    camera.add(listener);
-    globalAudio = new THREE.Audio(listener);
-    globalAudio.setVolume(0.75);
-    audioContextInitialized = true;
-    console.log("AudioContext geïnitialiseerd na user gesture");
+  if (audioContextInitialized) return;
+  camera.add(listener);
+  globalAudio = new THREE.Audio(listener);
+  globalAudio.setVolume(0.75);
+  audioContextInitialized = true;
+  console.log("AudioContext geïnitialiseerd na user gesture");
 }
 
 // ---- RESIZE ----
@@ -214,7 +214,7 @@ for (let i = 0; i < sides; i++) {
   const signCanvas = document.createElement('canvas');
   signCanvas.width = 1024;
   signCanvas.height = 512;
-  
+
   // Teken initiële tekst
   tekenBordje(signCanvas, kamerNamen[kamerIndex]);
 
@@ -247,14 +247,14 @@ for (let i = 0; i < sides; i++) {
 
 // Hulpfunctie om de tekst op het canvas te tekenen
 function tekenBordje(canvas, tekst) {
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#995F2F'; // Houtkleur
-    ctx.fillRect(0, 0, 1024, 512);
-    ctx.fillStyle = '#000000';
-    ctx.font = 'Bold 140px Arial'; // Iets kleiner font voor lange namen
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(tekst, 512, 256);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#995F2F'; // Houtkleur
+  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'Bold 140px Arial'; // Iets kleiner font voor lange namen
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(tekst, 512, 256);
 }
 
 // ---- PLAFOND ----
@@ -602,15 +602,15 @@ for (let i = 0; i < sides; i++) {
 const KAMER_TO_ROOM = { 1: 0, 2: 1, 3: 2, 4: 3 };
 
 const PLAATS_CONFIG = {
-  1: { wall: 'back',  offset: -2.5 },
-  2: { wall: 'back',  offset:  0   },
-  3: { wall: 'back',  offset:  2.5 },
-  4: { wall: 'left',  offset: -2.5 },
-  5: { wall: 'left',  offset:  0   },
-  6: { wall: 'left',  offset:  2.5 },
+  1: { wall: 'back', offset: -2.5 },
+  2: { wall: 'back', offset: 0 },
+  3: { wall: 'back', offset: 2.5 },
+  4: { wall: 'left', offset: -2.5 },
+  5: { wall: 'left', offset: 0 },
+  6: { wall: 'left', offset: 2.5 },
   7: { wall: 'right', offset: -2.5 },
-  8: { wall: 'right', offset:  0   },
-  9: { wall: 'right', offset:  2.5 },
+  8: { wall: 'right', offset: 0 },
+  9: { wall: 'right', offset: 2.5 },
 };
 
 function getFramePosition(kamerId, plaatsNr) {
@@ -730,7 +730,7 @@ function tekenBookOpen(ctx) {
 
 // MdPlayCircle icoon
 function tekenPlayCircle(ctx) {
-  ctx.scale(128/24, 128/24);
+  ctx.scale(128 / 24, 128 / 24);
   // cirkel
   ctx.beginPath();
   ctx.arc(12, 12, 10, 0, Math.PI * 2);
@@ -746,7 +746,7 @@ function tekenPlayCircle(ctx) {
 
 // MdOutlineReplayCircleFilled icoon
 function tekenReplayCircle(ctx) {
-  ctx.scale(128/24, 128/24);
+  ctx.scale(128 / 24, 128 / 24);
   // cirkel met opening
   ctx.beginPath();
   ctx.arc(12, 12, 10, 0.5, Math.PI * 1.9);
@@ -770,15 +770,15 @@ function tekenReplayCircle(ctx) {
 // Hulpfunctie: maak knoppen aan voor een mesh
 function addButtonsForMesh(mesh, audioPath = null) {
   const hasAudio = audioPath && audioPath.trim() !== '';
-  
+
   // Alleen audio knop als er audio is
   if (hasAudio) {
     const btn = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.3, 0.05),
-      new THREE.MeshStandardMaterial({ 
-      map: maakKnopTexture('#00cc00', tekenPlayCircle),
-      roughness: 0.5
-})
+      new THREE.MeshStandardMaterial({
+        map: maakKnopTexture('#00cc00', tekenPlayCircle),
+        roughness: 0.5
+      })
     );
     btn.position.copy(mesh.position);
     btn.rotation.copy(mesh.rotation);
@@ -786,17 +786,17 @@ function addButtonsForMesh(mesh, audioPath = null) {
     btn.translateX(0.9);
     btn.translateZ(0.05);
     scene.add(btn);
-    
+
     // Laad specifieke audio voor dit kunstwerk
     const audioLoader = new THREE.AudioLoader();
-    audioLoader.setCrossOrigin('anonymous'); 
+    audioLoader.setCrossOrigin('anonymous');
     const specificSound = new THREE.Audio(listener);
-    
+
     // Construeer volledige URL als het een relatief pad is
-    const fullAudioUrl = audioPath.startsWith('http') 
-      ? audioPath 
+    const fullAudioUrl = audioPath.startsWith('http')
+      ? audioPath
       : `${API_BASE}/index.php${audioPath.startsWith('/') ? '' : '/'}${audioPath}`;
-    
+
     audioLoader.load(fullAudioUrl, (buffer) => {
       specificSound.setBuffer(buffer);
       specificSound.setLoop(false);
@@ -804,22 +804,22 @@ function addButtonsForMesh(mesh, audioPath = null) {
     }, undefined, (err) => {
       console.warn('Kon audio niet laden:', fullAudioUrl, err);
     });
-    
-    audioButtons.push({ 
-      button: btn, 
-      isPlaying: false, 
+
+    audioButtons.push({
+      button: btn,
+      isPlaying: false,
       audio: specificSound,
-      mesh: mesh 
+      mesh: mesh
     });
   }
 
   // Lees meer knop (altijd toevoegen als er beschrijving is, of fallback voor placeholders)
   const leesBtn = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.05),
-    new THREE.MeshStandardMaterial({ 
-    map: maakKnopTexture('#0000ff', tekenBookOpen),
-    roughness: 0.5
-})
+    new THREE.MeshStandardMaterial({
+      map: maakKnopTexture('#0000ff', tekenBookOpen),
+      roughness: 0.5
+    })
   );
   leesBtn.position.copy(mesh.position);
   leesBtn.rotation.copy(mesh.rotation);
@@ -828,10 +828,10 @@ function addButtonsForMesh(mesh, audioPath = null) {
   leesBtn.translateX(hasAudio ? 0.5 : 0.7);
   leesBtn.translateZ(0.05);
   scene.add(leesBtn);
-  
-  leesMeerButtons.push({ 
-    button: leesBtn, 
-    data: mesh.userData 
+
+  leesMeerButtons.push({
+    button: leesBtn,
+    data: mesh.userData
   });
 }
 
@@ -848,18 +848,18 @@ async function loadKunstwerkenFromAPI() {
       fetch(`${API_BASE}/frames`),
       fetch(`${API_BASE}/kamers`)
     ]);
-    
-    const kunstData  = await resKunst.json();
+
+    const kunstData = await resKunst.json();
     const framesData = await resFrames.json();
     const kamersData = await resKamers.json();
 
     // ---- UPDATE DE BORDJES ----
     kamersData.forEach((kamer, i) => {
-        if (signPlates[i]) {
-            const canvas = signPlates[i].material.map.image; // Pak het bestaande canvas
-            tekenBordje(canvas, kamer.Naam); // Teken de nieuwe naam erop
-            signPlates[i].material.map.needsUpdate = true; // Vertel Three.js dat de texture is veranderd
-        }
+      if (signPlates[i]) {
+        const canvas = signPlates[i].material.map.image; // Pak het bestaande canvas
+        tekenBordje(canvas, kamer.Naam); // Teken de nieuwe naam erop
+        signPlates[i].material.map.needsUpdate = true; // Vertel Three.js dat de texture is veranderd
+      }
     });
 
     // ---- REST VAN JE BESTAANDE KUNSTWERK CODE ----
@@ -872,40 +872,46 @@ async function loadKunstwerkenFromAPI() {
     artLoader.crossOrigin = 'anonymous';
 
     kunstData.forEach(kunst => {
-        // ... (je bestaande code om schilderijen te plaatsen) ...
-        if (!kunst.ImageUrl || !kunst.FramePlaatsId) return;
-        const frameInfo = frameMap[kunst.FramePlaatsId];
-        if (!frameInfo) return;
+      // ... (je bestaande code om schilderijen te plaatsen) ...
+      if (!kunst.ImageUrl || !kunst.FramePlaatsId) return;
+      const frameInfo = frameMap[kunst.FramePlaatsId];
+      if (!frameInfo) return;
 
-        const pos = getFramePosition(frameInfo.kamerId, frameInfo.plaatsNr);
-        if (!pos) return;
+      const pos = getFramePosition(frameInfo.kamerId, frameInfo.plaatsNr);
+      if (!pos) return;
 
-        const fullImageUrl = kunst.ImageUrl;
+      const fullImageUrl = kunst.ImageUrl;
 
 
-        artLoader.load(fullImageUrl, (tex) => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          const aspect = tex.image.width / tex.image.height;
-          const artW = aspect >= 1 ? 2 : 2 * aspect;
-          const artH = aspect >= 1 ? 2 / aspect : 2;
+      artLoader.load(fullImageUrl, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const aspect = tex.image.width / tex.image.height;
+        const artW = aspect >= 1 ? 2 : 2 * aspect;
+        const artH = aspect >= 1 ? 2 / aspect : 2;
 
-          const mesh = new THREE.Mesh(
-              new THREE.PlaneGeometry(artW, artH),
-              new THREE.MeshStandardMaterial({ map: tex })
-          );
-          mesh.position.set(pos.x, pos.y, pos.z);
-          mesh.rotation.y = pos.rotY;
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(artW, artH),
+          new THREE.MeshBasicMaterial({
+            map: tex,
+            roughness: 1,
+            metalness: 0,
+            emissive: new THREE.Color(0.15, 0.15, 0.15),
+            emissiveMap: tex
+          })
+        );
+        mesh.position.set(pos.x, pos.y, pos.z);
+        mesh.rotation.y = pos.rotY;
 
-          // ← userData HIER zetten, niet erna
-          mesh.userData = {
-              titel:  kunst.Naam         || 'Naamloos',
-              tekst:  kunst.Beschrijving || '',
-              auteur: kunst.Auteur       || '',
-              imageUrl: fullImageUrl,
-          };
+        // ← userData HIER zetten, niet erna
+        mesh.userData = {
+          titel: kunst.Naam || 'Naamloos',
+          tekst: kunst.Beschrijving || '',
+          auteur: kunst.Auteur || '',
+          imageUrl: fullImageUrl,
+        };
 
-          scene.add(mesh);
-          addButtonsForMesh(mesh, kunst.Audiopath);
+        scene.add(mesh);
+        addButtonsForMesh(mesh, kunst.Audiopath);
       });
     });
 
@@ -993,43 +999,64 @@ function toonInfo(data) {
   if (!data) return;
   document.exitPointerLock();
 
-  const title  = data.titel       || data.Naam         || 'Naamloos Kunstwerk';
-  const description = data.tekst  || data.Beschrijving  || 'Geen beschrijving beschikbaar.';
-  const author = data.auteur      || data.Auteur        || 'Onbekende kunstenaar';
+  const title = data.titel || data.Naam || 'Naamloos Kunstwerk';
+  const description = data.tekst || data.Beschrijving || 'Geen beschrijving beschikbaar.';
+  const author = data.auteur || data.Auteur || 'Onbekende kunstenaar';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
 
   overlay.innerHTML = `
     <div id="kaart" style="
-      background:rgba(255,255,255,0.08);
+      background:rgba(20,20,20,0.95);
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,0.15);
+      border:1px solid rgba(255,255,255,0.1);
       padding:30px;
-      width:600px;
-      border-radius:10px;
+      width:90vw;
+      max-width:1100px;
+      height:80vh;
+      border-radius:16px;
       display:flex;
-      gap:20px;
+      flex-direction:row;
+      gap:30px;
       font-family:sans-serif;
       color:white;
+      box-sizing:border-box;
+      overflow:hidden;
     ">
-      <div style="flex:1;">
+      <!-- LINKER KOLOM: afbeelding -->
+      <div style="
+        flex:1;
+        min-width:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        overflow:hidden;
+      ">
         ${data.imageUrl
-          ? `<img src="${data.imageUrl}" style="width:100%; aspect-ratio:4/3; object-fit:contain; background:#111; border-radius:4px;" />`
-          : `<div style="width:100%; aspect-ratio:4/3; background:#eee; display:flex; justify-content:center; align-items:center; color:#666; font-weight:bold;">Geen afbeelding</div>`
+          ? `<img src="${data.imageUrl}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;" />`
+          : `<div style="width:100%; height:100%; background:#222; display:flex; justify-content:center; align-items:center; color:#666; border-radius:8px;">Geen afbeelding</div>`
         }
       </div>
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-        <div>
-          <h2 style="color:#aa1eaa; margin:0 0 5px 0;">${title}</h2>
-          <h4 style="margin:0 0 10px 0; color:#ccc; font-style:italic;">Door: ${author}</h4>
-          <p style="line-height:1.6; color:#ddd; font-size:14px;">${description}</p>
-        </div>
-        <button id="knop" style="padding:10px 20px; background:white; color:black; border:none; border-radius:4px; cursor:pointer; align-self:flex-end;">Terug</button>
+      <!-- RECHTER KOLOM: tekst -->
+      <div style="
+        flex:1;
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+        gap:16px;
+        overflow-y:auto;
+      ">
+        <h2 style="color:#cc44cc; margin:0; font-size:28px;">${title}</h2>
+        <p style="margin:0; color:#aaa; font-style:italic; font-size:16px;">Door: ${author}</p>
+        <p style="line-height:1.8; color:#ddd; font-size:15px; margin:0;">${description}</p>
+        <button id="knop" style="padding:10px 30px; background:white; color:black; border:none; border-radius:6px; cursor:pointer; font-size:15px; margin-top:10px;">Terug</button>
       </div>
     </div>`;
-
   document.body.appendChild(overlay);
 
   overlay.querySelector('#knop').onclick = () => {
@@ -1090,7 +1117,7 @@ window.addEventListener('click', () => {
           otherBtn.button.material.color.set(0x00ff00);
         }
       });
-      
+
       if (btn.isPlaying) {
         btn.audio.stop();
         btn.isPlaying = false;
@@ -1160,9 +1187,9 @@ function isAllowed(x, z) {
     const localZ = dx * Math.sin(angle) + dz * Math.cos(angle);
     if (
       localX > -roomWidth / 2 + margin &&
-      localX <  roomWidth / 2 - margin &&
+      localX < roomWidth / 2 - margin &&
       localZ > -roomDepth / 2 + margin &&
-      localZ <  roomDepth / 2 + 1.5
+      localZ < roomDepth / 2 + 1.5
     ) return true;
   }
 
@@ -1178,7 +1205,7 @@ function insidePentagon(x, z, margin = 0.4) {
     const x2 = Math.cos(angle2) * radius;
     const z2 = Math.sin(angle2) * radius;
     const nx = -(z2 - z1);
-    const nz =   x2 - x1;
+    const nz = x2 - x1;
     const len = Math.sqrt(nx * nx + nz * nz);
     const dot = ((x - x1) * nx + (z - z1) * nz) / len;
 
@@ -1209,8 +1236,8 @@ infoScherm.innerHTML = `
     <div style="margin:20px 0; font-size:15px; line-height:1.6; text-align:left; border-bottom: 1px solid #eee; padding-bottom: 15px;">
       <strong style="color:#555;">Navigatie:</strong><br>
       ${isMobiel ?
-        "• Swipe over het scherm om rond te kijken<br>• Tik op een schilderij voor details" :
-        "• <strong>W, A, S, D</strong> of pijltjestoetsen om te lopen<br>• <strong>Muis</strong> om vrij rond te kijken<br>• <strong>Klik</strong> op een schilderij voor extra informatie<br>• <strong>Scroll</strong> om in of uit te zoomen"}
+    "• Swipe over het scherm om rond te kijken<br>• Tik op een schilderij voor details" :
+    "• <strong>W, A, S, D</strong> of pijltjestoetsen om te lopen<br>• <strong>Muis</strong> om vrij rond te kijken<br>• <strong>Klik</strong> op een schilderij voor extra informatie<br>• <strong>Scroll</strong> om in of uit te zoomen"}
     </div>
 
     <div style="margin:15px 0; font-size:14px; line-height:1.5; text-align:left; background:#f5f5f5; padding:10px; border-radius:6px;">
@@ -1224,7 +1251,7 @@ infoScherm.innerHTML = `
 document.body.appendChild(infoScherm);
 
 // Voorkom dat klikken BINNEN de witte popup de boel sluit
-infoScherm.querySelector('div').addEventListener('click', function(e) {
+infoScherm.querySelector('div').addEventListener('click', function (e) {
   e.stopPropagation();
 });
 
@@ -1246,7 +1273,7 @@ infoScherm.onclick = startMuseum;
 
 let museumGestart = false;
 
-document.addEventListener('pointerlockchange', function() {
+document.addEventListener('pointerlockchange', function () {
   const popupOpen = document.querySelector('#kaart') !== null;
   if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) {
     toonGids();
@@ -1254,7 +1281,7 @@ document.addEventListener('pointerlockchange', function() {
 });
 
 // ---- ESCAPE NAAR HOME PAGE FUNCTIONALITEIT ----
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function (event) {
   if (event.key === 'Escape' || event.keyCode === 27) {
     if (document.pointerLockElement === null || isMobiel) {
       window.location.href = "index.html"; // Pas dit aan naar jouw home page URL
@@ -1266,7 +1293,7 @@ document.addEventListener('keydown', function(event) {
 function initJoystick({ camera, joystickEl, isMobile }) {
   if (!joystickEl) {
     console.error("joystickEl is null");
-    return { update() {}, resize() {} };
+    return { update() { }, resize() { } };
   }
 
   const move = { x: 0, y: 0 };
@@ -1295,7 +1322,7 @@ function initJoystick({ camera, joystickEl, isMobile }) {
   function update() {
     const spd = 0.05;
     const forward = new THREE.Vector3(Math.sin(look.yaw), 0, Math.cos(look.yaw));
-    const right   = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
+    const right = new THREE.Vector3(Math.cos(look.yaw), 0, -Math.sin(look.yaw));
 
     const next = camera.position.clone();
     next.add(forward.multiplyScalar(move.y * spd));

@@ -314,7 +314,10 @@
 
             // hiding cookie banner when entering
             const cookieBanner = document.getElementById('cookie-banner');
-            if (cookieBanner) cookieBanner.style.display = 'none';
+            if (cookieBanner) {
+                cookieBanner.classList.add('hidden');
+                cookieBanner.style.display = 'none';
+            }
 
             // 1. Fade out WHITE menu
             menuOverlay.classList.add('hidden');

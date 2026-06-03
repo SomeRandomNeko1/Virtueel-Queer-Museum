@@ -92,6 +92,7 @@
 
     const banner = document.createElement('div');
     banner.id = 'cookie-banner';
+    banner.classList.add('hidden');
     banner.innerHTML = `
         <div class="cookie-text">We use cookies to improve the experience. Choose an option.</div>
         <div class="cookie-row">
@@ -145,8 +146,12 @@
         }
 
         // initial state
-        if (!hasConsent()) cookieBanner.classList.remove('hidden');
-        else applyPrefsToInputs();
+        if (!hasConsent()) {
+            cookieBanner.classList.remove('hidden');
+        } else {
+            hide();
+            applyPrefsToInputs();
+        }
 
         agree.addEventListener('click', () => {
             const prefs = {consent: 'agreed', analytics: true, preferences: true, marketing: true};

@@ -273,20 +273,39 @@
 
         .menu-btn.disabled,
         .menu-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-            transform: none;
-            color: rgba(58, 53, 48, 0.65);
-            border-color: rgba(120, 100, 80, 0.15);
-            background: rgba(120, 100, 80, 0.02);
+            opacity: 0.3;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            transform: none !important;
+            color: rgba(58, 53, 48, 0.5) !important;
+            border-color: rgba(120, 100, 80, 0.1) !important;
+            background: rgba(120, 100, 80, 0.01) !important;
+            text-decoration: line-through;
+            text-decoration-opacity: 0.3;
         }
 
         .menu-btn.disabled:hover,
-        .menu-btn:disabled:hover {
-            border-color: rgba(120, 100, 80, 0.15);
-            color: rgba(58, 53, 48, 0.65);
-            background: rgba(120, 100, 80, 0.02);
+        .menu-btn.disabled:hover::before,
+        .menu-btn.disabled:hover::after,
+        .menu-btn:disabled:hover,
+        .menu-btn:disabled:hover::before,
+        .menu-btn:disabled:hover::after {
+            border-color: rgba(120, 100, 80, 0.1) !important;
+            color: rgba(58, 53, 48, 0.5) !important;
+            background: rgba(120, 100, 80, 0.01) !important;
+            transform: none !important;
+            width: 0 !important;
+            opacity: 0 !important;
+        }
+
+        @keyframes highlight-notice {
+            0% { color: rgba(60, 50, 45, 0.85); }
+            50% { color: #c97777; font-weight: 600; }
+            100% { color: rgba(60, 50, 45, 0.85); }
+        }
+
+        #start-notice.highlight-notice {
+            animation: highlight-notice 0.6s ease;
         }
 
         @keyframes button-shake {

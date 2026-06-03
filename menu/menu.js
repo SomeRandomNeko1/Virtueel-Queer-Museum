@@ -296,6 +296,7 @@
             const allowed = cookieConsentGiven();
             startBtn.disabled = !allowed;
             startBtn.classList.toggle('disabled', !allowed);
+            startBtn.style.pointerEvents = allowed ? 'auto' : 'none';
             startNotice.textContent = allowed
                 ? 'Je hebt cookies gekozen. Begin de tour nu.'
                 : 'Accepteer eerst de cookies om te kunnen beginnen.';
@@ -303,13 +304,23 @@
         updateStartButton();
         window.addEventListener('cookieConsentChanged', updateStartButton);
 
-        document.getElementById('btn-start').addEventListener('click', () => {
+        // Voeg onclick handler toe als extra blokkering
+        startBtn.addEventListener('click', (e) => {
             if (!cookieConsentGiven()) {
+                e.preventDefault();
+                e.stopPropagation();
                 const cookieBanner = document.getElementById('cookie-banner');
                 if (cookieBanner) cookieBanner.classList.remove('hidden');
                 startBtn.classList.add('shake');
+                
+                // Highlight the notice message
+                startNotice.classList.add('highlight-notice');
+                setTimeout(() => {
+                    startNotice.classList.remove('highlight-notice');
+                }, 600);
+                
                 setTimeout(() => startBtn.classList.remove('shake'), 500);
-                return;
+                return false;
             }
 
             // hiding cookie banner when entering

@@ -284,6 +284,34 @@ balieTop.position.set(0, 1.1, 0);
 balieTop.rotation.y = Math.PI / -1.5;
 scene.add(balieTop);
 
+// ---- BOEK OP BALIE ----
+const boekGroup = new THREE.Group();
+
+const boekBody = new THREE.Mesh(
+  new THREE.BoxGeometry(0.4, 0.08, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.8 })
+);
+boekBody.position.y = 0.04;
+boekGroup.add(boekBody);
+
+const boekPaginas = new THREE.Mesh(
+  new THREE.BoxGeometry(0.37, 0.06, 0.48),
+  new THREE.MeshStandardMaterial({ color: 0xFFFAF0, roughness: 1 })
+);
+boekPaginas.position.set(0.02, 0.04, 0);
+boekGroup.add(boekPaginas);
+
+const boekRug = new THREE.Mesh(
+  new THREE.BoxGeometry(0.04, 0.09, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0x5c0000, roughness: 0.8 })
+);
+boekRug.position.set(-0.2, 0.04, 0);
+boekGroup.add(boekRug);
+
+boekGroup.position.set(0.5, 1.15, 0.3);
+boekGroup.rotation.y = 0.3;
+scene.add(boekGroup);
+
 // ---- ENTREE GANG ----
 const gangMat = new THREE.MeshStandardMaterial({ color: 0x622B14, side: THREE.DoubleSide });
 const gangFloorMat = new THREE.MeshStandardMaterial({ map: betonTexture });
@@ -995,74 +1023,115 @@ roomPositions.forEach((kamer, i) => {
 });
 
 // ---- POPUP ----
-function toonInfo(data) {
-  if (!data) return;
+function toonReviewPopup() {
   document.exitPointerLock();
-
-  const title = data.titel || data.Naam || 'Naamloos Kunstwerk';
-  const description = data.tekst || data.Beschrijving || 'Geen beschrijving beschikbaar.';
-  const author = data.auteur || data.Auteur || 'Onbekende kunstenaar';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
 
   overlay.innerHTML = `
-    <div id="kaart" style="
-      background:rgba(20,20,20,0.95);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,0.1);
-      padding:30px;
-      width:90vw;
-      max-width:1100px;
-      height:80vh;
-      border-radius:16px;
-      display:flex;
-      flex-direction:row;
-      gap:30px;
-      font-family:sans-serif;
-      color:white;
-      box-sizing:border-box;
-      overflow:hidden;
-    ">
-      <!-- LINKER KOLOM: afbeelding -->
-      <div style="
-        flex:1;
-        min-width:0;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        overflow:hidden;
-      ">
-        ${data.imageUrl
-          ? `<img src="${data.imageUrl}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;" />`
-          : `<div style="width:100%; height:100%; background:#222; display:flex; justify-content:center; align-items:center; color:#666; border-radius:8px;">Geen afbeelding</div>`
-        }
+  <div id="reviewKaart" style="
+    background:white;
+    color:black;
+    border-radius:12px;
+    padding:30px;
+    width:400px;
+    max-width:90%;
+    box-shadow:0px 4px 15px rgba(0,0,0,0.5);
+    cursor:default;
+    font-family:sans-serif;
+  ">
+    <h3 style="margin-top:0; font-size:22px; color:#222;">Gastenboek</h3>
+
+    <div id="reviewFormInner">
+      <div style="margin-bottom:12px; text-align:left;">
+        <label style="font-size:14px; color:#555; display:block; margin-bottom:4px;">Naam</label>
+        <input type="text" id="reviewName" placeholder="Jouw naam"
+               style="width:100%; padding:8px; box-sizing:border-box;
+                      border:1px solid #ccc; border-radius:6px; font-size:14px;">
       </div>
-      <!-- RECHTER KOLOM: tekst -->
-      <div style="
-        flex:1;
-        min-width:0;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        text-align:center;
-        gap:16px;
-        overflow-y:auto;
-      ">
-        <h2 style="color:#cc44cc; margin:0; font-size:28px;">${title}</h2>
-        <p style="margin:0; color:#aaa; font-style:italic; font-size:16px;">Door: ${author}</p>
-        <p style="line-height:1.8; color:#ddd; font-size:15px; margin:0;">${description}</p>
-        <button id="knop" style="padding:10px 30px; background:white; color:black; border:none; border-radius:6px; cursor:pointer; font-size:15px; margin-top:10px;">Terug</button>
+
+      <div style="margin-bottom:12px; text-align:left;">
+        <label style="font-size:14px; color:#555; display:block; margin-bottom:4px;">Beoordeling</label>
+        <div id="reviewStars" style="display:flex; gap:8px; cursor:pointer; font-size:32px;">
+          <span data-v="1">☆</span>
+          <span data-v="2">☆</span>
+          <span data-v="3">☆</span>
+          <span data-v="4">☆</span>
+          <span data-v="5">☆</span>
+        </div>
       </div>
-    </div>`;
+
+      <div style="margin-bottom:12px; text-align:left;">
+        <label style="font-size:14px; color:#555; display:block; margin-bottom:4px;">Bericht</label>
+        <textarea id="reviewText" rows="4" placeholder="Wat vond je van het museum?"
+                  style="width:100%; padding:8px; box-sizing:border-box;
+                         border:1px solid #ccc; border-radius:6px;
+                         font-size:14px; resize:vertical;"></textarea>
+      </div>
+
+      <div id="reviewError" style="display:none; color:red; font-size:13px; margin-bottom:8px;"></div>
+
+      <button id="submitReviewBtn"
+              style="padding:12px 20px; background:#333; color:white; border:none;
+                     border-radius:6px; cursor:pointer; width:100%; font-size:16px; margin-bottom:8px;">
+        Verstuur
+      </button>
+      <button id="sluitReviewBtn"
+              style="padding:12px 20px; background:white; color:#333; border:2px solid #ccc;
+                     border-radius:6px; cursor:pointer; width:100%; font-size:16px;">
+        Sluiten
+      </button>
+    </div>
+
+    <div id="reviewSuccess" style="display:none; text-align:center; padding:20px 0;">
+      <div style="font-size:52px;">✓</div>
+      <p style="font-size:18px; font-weight:bold;">Bedankt voor je recensie!</p>
+      <p style="color:#666; font-size:14px;">Je feedback helpt ons het museum te verbeteren.</p>
+      <button id="sluitSuccessBtn"
+              style="margin-top:12px; padding:12px 20px; background:#333; color:white;
+                     border:none; border-radius:6px; cursor:pointer; width:100%; font-size:16px;">
+        Sluiten
+      </button>
+    </div>
+  </div>`;
+
   document.body.appendChild(overlay);
 
-  overlay.querySelector('#knop').onclick = () => {
+  // Sterren logica
+  let reviewRating = 0;
+  const starEls = overlay.querySelectorAll('#reviewStars span');
+  starEls.forEach(s => {
+    s.addEventListener('click', () => {
+      reviewRating = +s.dataset.v;
+      starEls.forEach((x, i) => x.textContent = i < reviewRating ? '★' : '☆');
+    });
+  });
+
+  // Verstuur
+  overlay.querySelector('#submitReviewBtn').onclick = () => {
+    const name = overlay.querySelector('#reviewName').value.trim();
+    const text = overlay.querySelector('#reviewText').value.trim();
+    const err = overlay.querySelector('#reviewError');
+
+    if (!name || !reviewRating || !text) {
+      err.textContent = 'Vul alle velden in en geef een beoordeling.';
+      err.style.display = 'block';
+      return;
+    }
+
+    overlay.querySelector('#reviewFormInner').style.display = 'none';
+    overlay.querySelector('#reviewSuccess').style.display = 'block';
+  };
+
+  // Sluiten knoppen
+  function sluit() {
     overlay.remove();
     canvas.requestPointerLock();
-  };
+  }
+
+  overlay.querySelector('#sluitReviewBtn').onclick = sluit;
+  overlay.querySelector('#sluitSuccessBtn').onclick = sluit;
 }
 
 // ---- CONTROLS ----
@@ -1132,6 +1201,13 @@ window.addEventListener('click', () => {
       return;
     }
   }
+
+  // Boek check
+const boekHits = raycaster.intersectObjects(boekGroup.children);
+if (boekHits.length > 0) {
+  toonReviewPopup();
+  return;
+}
 
   // Lees meer check
   const leesMeerHits = raycaster.intersectObjects(leesMeerButtons.map(b => b.button));
@@ -1282,7 +1358,8 @@ let museumGestart = false;
 
 document.addEventListener('pointerlockchange', function () {
   const popupOpen = document.querySelector('#kaart') !== null;
-  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen) {
+  const reviewOpen = document.querySelector('#reviewKaart') !== null;
+  if (document.pointerLockElement === null && !isMobiel && museumGestart && !popupOpen && !reviewOpen) {
     toonGids();
   }
 });

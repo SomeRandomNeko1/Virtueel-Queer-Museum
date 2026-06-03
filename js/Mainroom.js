@@ -628,9 +628,9 @@ function getFramePosition(kamerId, plaatsNr) {
 
   if (cfg.wall === 'back') {
     return {
-      x: kamer.rx + wx * (roomDepth / 2 - 9) + px * cfg.offset,
+      x: kamer.rx + wx * (roomDepth / 2 - 9.9) + px * cfg.offset,
       y: 2.5,
-      z: kamer.rz + wz * (roomDepth / 2 - 9) + pz * cfg.offset,
+      z: kamer.rz + wz * (roomDepth / 2 - 9.9) + pz * cfg.offset,
       rotY: angle
     };
   } else if (cfg.wall === 'left') {
@@ -654,6 +654,119 @@ function getFramePosition(kamerId, plaatsNr) {
 const audioButtons = [];
 const leesMeerButtons = [];
 
+
+function maakKnopTexture(kleur, tekenFunctie) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  // Achtergrond
+  ctx.fillStyle = kleur;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 128, 128, 20);
+  ctx.fill();
+
+  // Icoon wit
+  ctx.fillStyle = 'white';
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  tekenFunctie(ctx);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+// FiBookOpen icoon
+function tekenBookOpen(ctx) {
+  ctx.save();
+  ctx.translate(64, 64);
+
+  // Linker pagina
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  ctx.moveTo(-50, -40);
+  ctx.lineTo(-5, -30);
+  ctx.lineTo(-5, 40);
+  ctx.lineTo(-50, 40);
+  ctx.closePath();
+  ctx.fill();
+
+  // Rechter pagina
+  ctx.beginPath();
+  ctx.moveTo(5, -30);
+  ctx.lineTo(50, -40);
+  ctx.lineTo(50, 40);
+  ctx.lineTo(5, 40);
+  ctx.closePath();
+  ctx.fill();
+
+  // Binding midden
+  ctx.fillStyle = '#aaaaff';
+  ctx.fillRect(-5, -30, 10, 70);
+
+  // Lijntjes links
+  ctx.strokeStyle = '#0000cc';
+  ctx.lineWidth = 3;
+  [-15, -5, 5, 15, 25].forEach(y => {
+    ctx.beginPath();
+    ctx.moveTo(-45, y);
+    ctx.lineTo(-8, y);
+    ctx.stroke();
+  });
+
+  // Lijntjes rechts
+  [-15, -5, 5, 15, 25].forEach(y => {
+    ctx.beginPath();
+    ctx.moveTo(8, y);
+    ctx.lineTo(45, y);
+    ctx.stroke();
+  });
+
+  ctx.restore();
+}
+
+// MdPlayCircle icoon
+function tekenPlayCircle(ctx) {
+  ctx.scale(128/24, 128/24);
+  // cirkel
+  ctx.beginPath();
+  ctx.arc(12, 12, 10, 0, Math.PI * 2);
+  ctx.stroke();
+  // play driehoek
+  ctx.beginPath();
+  ctx.moveTo(10, 8);
+  ctx.lineTo(10, 16);
+  ctx.lineTo(17, 12);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// MdOutlineReplayCircleFilled icoon
+function tekenReplayCircle(ctx) {
+  ctx.scale(128/24, 128/24);
+  // cirkel met opening
+  ctx.beginPath();
+  ctx.arc(12, 12, 10, 0.5, Math.PI * 1.9);
+  ctx.stroke();
+  // pijltje
+  ctx.beginPath();
+  ctx.moveTo(4.5, 6);
+  ctx.lineTo(3, 9.5);
+  ctx.lineTo(7, 9.5);
+  ctx.closePath();
+  ctx.fill();
+  // play driehoek
+  ctx.beginPath();
+  ctx.moveTo(10, 8);
+  ctx.lineTo(10, 16);
+  ctx.lineTo(17, 12);
+  ctx.closePath();
+  ctx.fill();
+}
+
 // Hulpfunctie: maak knoppen aan voor een mesh
 function addButtonsForMesh(mesh, audioPath = null) {
   const hasAudio = audioPath && audioPath.trim() !== '';
@@ -662,7 +775,10 @@ function addButtonsForMesh(mesh, audioPath = null) {
   if (hasAudio) {
     const btn = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.3, 0.05),
-      new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+      new THREE.MeshStandardMaterial({ 
+      map: maakKnopTexture('#00cc00', tekenPlayCircle),
+      roughness: 0.5
+})
     );
     btn.position.copy(mesh.position);
     btn.rotation.copy(mesh.rotation);
@@ -700,7 +816,10 @@ function addButtonsForMesh(mesh, audioPath = null) {
   // Lees meer knop (altijd toevoegen als er beschrijving is, of fallback voor placeholders)
   const leesBtn = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x0000ff })
+    new THREE.MeshStandardMaterial({ 
+    map: maakKnopTexture('#0000ff', tekenBookOpen),
+    roughness: 0.5
+})
   );
   leesBtn.position.copy(mesh.position);
   leesBtn.rotation.copy(mesh.rotation);
@@ -975,11 +1094,13 @@ window.addEventListener('click', () => {
       if (btn.isPlaying) {
         btn.audio.stop();
         btn.isPlaying = false;
-        btn.button.material.color.set(0x00ff00);
+        btn.button.material.map = maakKnopTexture('#00cc00', tekenPlayCircle);
+        btn.button.material.needsUpdate = true;
       } else {
         btn.audio.play();
         btn.isPlaying = true;
-        btn.button.material.color.set(0xff0000);
+        btn.button.material.map = maakKnopTexture('#cc0000', tekenReplayCircle);
+        btn.button.material.needsUpdate = true;
       }
       return;
     }

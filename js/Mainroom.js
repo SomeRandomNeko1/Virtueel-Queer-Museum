@@ -1246,7 +1246,10 @@ infoScherm.innerHTML = `
     </div>
 
     <button id="startMuseumBtn" style="padding:12px 20px; background:#333; color:white; border:none; border-radius:6px; cursor:pointer; width:100%; font-size:16px; margin-top:10px;">Start de ervaring</button>
+    <button id="homeMenuBtn" style="padding:12px 20px; background:white; color:#333; border:2px solid #ccc; border-radius:6px; cursor:pointer; width:100%; font-size:16px; margin-top:8px;">← Terug naar home</button>
   </div>
+
+  
 `;
 document.body.appendChild(infoScherm);
 
@@ -1254,6 +1257,10 @@ document.body.appendChild(infoScherm);
 infoScherm.querySelector('div').addEventListener('click', function (e) {
   e.stopPropagation();
 });
+
+document.getElementById('homeMenuBtn').onclick = function () {
+  window.location.href = "index.html";
+};
 
 function startMuseum() {
   infoScherm.style.display = "none";

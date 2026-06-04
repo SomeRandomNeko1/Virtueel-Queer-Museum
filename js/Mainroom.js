@@ -1023,6 +1023,79 @@ roomPositions.forEach((kamer, i) => {
 });
 
 // ---- POPUP ----
+function toonInfo(data) {
+  if (!data) return;
+  document.exitPointerLock();
+
+  const title = data.titel || data.Naam || 'Naamloos Kunstwerk';
+  const description = data.tekst || data.Beschrijving || 'Geen beschrijving beschikbaar.';
+  const author = data.auteur || data.Auteur || 'Onbekende kunstenaar';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000;";
+
+  overlay.innerHTML = `
+    <div id="kaart" style="
+      background:rgba(20,20,20,0.95);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.1);
+      padding:30px;
+      width:90vw;
+      max-width:1100px;
+      height:80vh;
+      border-radius:16px;
+      display:flex;
+      flex-direction:row;
+      gap:30px;
+      font-family:sans-serif;
+      color:white;
+      box-sizing:border-box;
+      overflow:hidden;
+    ">
+      <!-- LINKER KOLOM: afbeelding -->
+      <div style="
+        flex:1;
+        min-width:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        overflow:hidden;
+      ">
+        ${data.imageUrl
+          ? `<img src="${data.imageUrl}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;" />`
+          : `<div style="width:100%; height:100%; background:#222; display:flex; justify-content:center; align-items:center; color:#666; border-radius:8px;">Geen afbeelding</div>`
+        }
+      </div>
+      <!-- RECHTER KOLOM: tekst -->
+      <div style="
+        flex:1;
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+        gap:16px;
+        overflow-y:auto;
+      ">
+        <h2 style="color:#cc44cc; margin:0; font-size:28px;">${title}</h2>
+        <p style="margin:0; color:#aaa; font-style:italic; font-size:16px;">Door: ${author}</p>
+        <p style="line-height:1.8; color:#ddd; font-size:15px; margin:0;">${description}</p>
+        <button id="knop" style="padding:10px 30px; background:white; color:black; border:none; border-radius:6px; cursor:pointer; font-size:15px; margin-top:10px;">Terug</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#knop').onclick = () => {
+    overlay.remove();
+    canvas.requestPointerLock();
+  };
+}
+
+// ---- GASTENBOEK POPUP ----
+const REVIEWS_PER_PAGE = 5;
+
 function toonReviewPopup() {
   document.exitPointerLock();
 
@@ -1035,46 +1108,64 @@ function toonReviewPopup() {
     color:black;
     border-radius:12px;
     padding:30px;
-    width:400px;
+    width:480px;
     max-width:90%;
+    max-height:85vh;
+    overflow-y:auto;
     box-shadow:0px 4px 15px rgba(0,0,0,0.5);
     cursor:default;
     font-family:sans-serif;
   ">
     <h3 style="margin-top:0; font-size:22px; color:#222;">Gastenboek</h3>
 
+    <!-- TABS -->
+    <div style="display:flex; gap:0; margin-bottom:16px; border-bottom:2px solid #eee;">
+      <button id="tabSchrijf" style="flex:1; padding:10px; border:none; background:white;
+        border-bottom:3px solid #333; font-weight:bold; font-size:14px; cursor:pointer; color:#333;">
+        Schrijf
+      </button>
+      <button id="tabLees" style="flex:1; padding:10px; border:none; background:white;
+        border-bottom:3px solid transparent; font-size:14px; cursor:pointer; color:#999;">
+        Berichten (...)
+      </button>
+    </div>
+
+    <!-- SCHRIJF FORMULIER -->
     <div id="reviewFormInner">
       <div style="margin-bottom:12px; text-align:left;">
         <label style="font-size:14px; color:#555; display:block; margin-bottom:4px;">Naam</label>
-        <input type="text" id="reviewName" placeholder="Jouw naam"
-               style="width:100%; padding:8px; box-sizing:border-box;
+        <input type="text" id="reviewName" placeholder="Jouw naam" maxlength="100"
+               style="width:100%; padding:10px; box-sizing:border-box;
                       border:1px solid #ccc; border-radius:6px; font-size:14px;">
       </div>
 
       <div style="margin-bottom:12px; text-align:left;">
         <label style="font-size:14px; color:#555; display:block; margin-bottom:4px;">Beoordeling</label>
-        <div id="reviewStars" style="display:flex; gap:8px; cursor:pointer; font-size:32px;">
-          <span data-v="1">☆</span>
-          <span data-v="2">☆</span>
-          <span data-v="3">☆</span>
-          <span data-v="4">☆</span>
-          <span data-v="5">☆</span>
+        <div id="reviewStars" style="display:flex; gap:6px; cursor:pointer; font-size:36px; user-select:none;">
+          <span data-v="1" style="transition:transform 0.1s; color:#ccc;">&#9734;</span>
+          <span data-v="2" style="transition:transform 0.1s; color:#ccc;">&#9734;</span>
+          <span data-v="3" style="transition:transform 0.1s; color:#ccc;">&#9734;</span>
+          <span data-v="4" style="transition:transform 0.1s; color:#ccc;">&#9734;</span>
+          <span data-v="5" style="transition:transform 0.1s; color:#ccc;">&#9734;</span>
         </div>
       </div>
 
       <div style="margin-bottom:12px; text-align:left;">
         <label style="font-size:14px; color:#555; display:block; margin-bottom:4px;">Bericht</label>
-        <textarea id="reviewText" rows="4" placeholder="Wat vond je van het museum?"
-                  style="width:100%; padding:8px; box-sizing:border-box;
+        <textarea id="reviewText" rows="4" placeholder="Wat vond je van het museum?" maxlength="2000"
+                  style="width:100%; padding:10px; box-sizing:border-box;
                          border:1px solid #ccc; border-radius:6px;
                          font-size:14px; resize:vertical;"></textarea>
+        <div style="text-align:right; font-size:11px; color:#aaa;" id="charCount">0 / 2000</div>
       </div>
 
-      <div id="reviewError" style="display:none; color:red; font-size:13px; margin-bottom:8px;"></div>
+      <div id="reviewError" style="display:none; color:#cc0000; font-size:13px;
+           margin-bottom:8px; background:#fff0f0; padding:8px; border-radius:6px;"></div>
 
       <button id="submitReviewBtn"
               style="padding:12px 20px; background:#333; color:white; border:none;
-                     border-radius:6px; cursor:pointer; width:100%; font-size:16px; margin-bottom:8px;">
+                     border-radius:6px; cursor:pointer; width:100%; font-size:16px;
+                     margin-bottom:8px; transition:background 0.2s;">
         Verstuur
       </button>
       <button id="sluitReviewBtn"
@@ -1084,13 +1175,55 @@ function toonReviewPopup() {
       </button>
     </div>
 
+    <!-- SUCCES -->
     <div id="reviewSuccess" style="display:none; text-align:center; padding:20px 0;">
-      <div style="font-size:52px;">✓</div>
-      <p style="font-size:18px; font-weight:bold;">Bedankt voor je recensie!</p>
+      <div style="font-size:42px; color:#333; font-weight:bold;">&#10003;</div>
+      <p style="font-size:18px; font-weight:bold; color:#222;">Bedankt voor je recensie!</p>
       <p style="color:#666; font-size:14px;">Je feedback helpt ons het museum te verbeteren.</p>
+      <button id="nogEenBtn"
+              style="margin-top:8px; padding:12px 20px; background:white; color:#333;
+                     border:2px solid #ccc; border-radius:6px; cursor:pointer;
+                     width:100%; font-size:14px;">
+        Nog een bericht schrijven
+      </button>
       <button id="sluitSuccessBtn"
-              style="margin-top:12px; padding:12px 20px; background:#333; color:white;
+              style="margin-top:8px; padding:12px 20px; background:#333; color:white;
                      border:none; border-radius:6px; cursor:pointer; width:100%; font-size:16px;">
+        Sluiten
+      </button>
+    </div>
+
+    <!-- REVIEWS LIJST -->
+    <div id="reviewLijst" style="display:none;">
+      <div id="reviewsContainer" style="min-height:100px;">
+        <div style="text-align:center; padding:30px; color:#999;">Laden...</div>
+      </div>
+
+      <!-- PAGINERING -->
+      <div id="paginering" style="display:none; margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <button id="prevPageBtn"
+                  style="padding:10px 16px; background:white; color:#333; border:2px solid #ccc;
+                         border-radius:6px; cursor:pointer; font-size:13px; font-weight:bold;
+                         flex:1; transition:background 0.15s;">
+            &larr; Vorige
+          </button>
+          <span id="pageInfo" style="font-size:13px; color:#666; white-space:nowrap; padding:0 8px;">
+            Pagina 1 van 1
+          </span>
+          <button id="nextPageBtn"
+                  style="padding:10px 16px; background:white; color:#333; border:2px solid #ccc;
+                         border-radius:6px; cursor:pointer; font-size:13px; font-weight:bold;
+                         flex:1; transition:background 0.15s;">
+            Volgende &rarr;
+          </button>
+        </div>
+      </div>
+
+      <button id="sluitLijstBtn"
+              style="margin-top:12px; padding:12px 20px; background:white; color:#333;
+                     border:2px solid #ccc; border-radius:6px; cursor:pointer;
+                     width:100%; font-size:16px;">
         Sluiten
       </button>
     </div>
@@ -1098,40 +1231,303 @@ function toonReviewPopup() {
 
   document.body.appendChild(overlay);
 
-  // Sterren logica
+  // ── Elementen ──
+  const tabSchrijf   = overlay.querySelector('#tabSchrijf');
+  const tabLees      = overlay.querySelector('#tabLees');
+  const formInner    = overlay.querySelector('#reviewFormInner');
+  const successDiv   = overlay.querySelector('#reviewSuccess');
+  const lijstDiv     = overlay.querySelector('#reviewLijst');
+  const container    = overlay.querySelector('#reviewsContainer');
+  const errDiv       = overlay.querySelector('#reviewError');
+  const charCount    = overlay.querySelector('#charCount');
+  const nameInput    = overlay.querySelector('#reviewName');
+  const textArea     = overlay.querySelector('#reviewText');
+  const submitBtn    = overlay.querySelector('#submitReviewBtn');
+  const prevBtn      = overlay.querySelector('#prevPageBtn');
+  const nextBtn      = overlay.querySelector('#nextPageBtn');
+  const pageInfo     = overlay.querySelector('#pageInfo');
+  const paginering   = overlay.querySelector('#paginering');
+
+  // ── Paginering state ──
+  let allReviews   = [];
+  let currentPage  = 1;
+  let totalPages   = 1;
+
+  // ── Tabs ──
+  function activeerTab(tab) {
+    if (tab === 'schrijf') {
+      tabSchrijf.style.borderBottomColor = '#333';
+      tabSchrijf.style.color = '#333';
+      tabSchrijf.style.fontWeight = 'bold';
+      tabLees.style.borderBottomColor = 'transparent';
+      tabLees.style.color = '#999';
+      tabLees.style.fontWeight = 'normal';
+      formInner.style.display = 'block';
+      successDiv.style.display = 'none';
+      lijstDiv.style.display = 'none';
+    } else {
+      tabLees.style.borderBottomColor = '#333';
+      tabLees.style.color = '#333';
+      tabLees.style.fontWeight = 'bold';
+      tabSchrijf.style.borderBottomColor = 'transparent';
+      tabSchrijf.style.color = '#999';
+      tabSchrijf.style.fontWeight = 'normal';
+      formInner.style.display = 'none';
+      successDiv.style.display = 'none';
+      lijstDiv.style.display = 'block';
+      laadReviews();
+    }
+  }
+
+  tabSchrijf.onclick = () => activeerTab('schrijf');
+  tabLees.onclick    = () => activeerTab('lees');
+
+  // ── Sterren ──
   let reviewRating = 0;
   const starEls = overlay.querySelectorAll('#reviewStars span');
+
   starEls.forEach(s => {
+    s.addEventListener('mouseenter', () => {
+      const hoverVal = +s.dataset.v;
+      starEls.forEach((x, i) => {
+        x.innerHTML = i < hoverVal ? '&#9733;' : '&#9734;';
+        x.style.color = i < hoverVal ? '#f5a623' : '#ccc';
+        x.style.transform = i < hoverVal ? 'scale(1.15)' : 'scale(1)';
+      });
+    });
+
     s.addEventListener('click', () => {
       reviewRating = +s.dataset.v;
-      starEls.forEach((x, i) => x.textContent = i < reviewRating ? '★' : '☆');
+      updateStars();
     });
   });
 
-  // Verstuur
-  overlay.querySelector('#submitReviewBtn').onclick = () => {
-    const name = overlay.querySelector('#reviewName').value.trim();
-    const text = overlay.querySelector('#reviewText').value.trim();
-    const err = overlay.querySelector('#reviewError');
+  overlay.querySelector('#reviewStars').addEventListener('mouseleave', updateStars);
 
-    if (!name || !reviewRating || !text) {
-      err.textContent = 'Vul alle velden in en geef een beoordeling.';
-      err.style.display = 'block';
-      return;
+  function updateStars() {
+    starEls.forEach((x, i) => {
+      x.innerHTML = i < reviewRating ? '&#9733;' : '&#9734;';
+      x.style.color = i < reviewRating ? '#f5a623' : '#ccc';
+      x.style.transform = 'scale(1)';
+    });
+  }
+
+  // ── Char counter ──
+  textArea.addEventListener('input', () => {
+    charCount.textContent = textArea.value.length + ' / 2000';
+  });
+
+  // ── Verstuur ──
+  submitBtn.onclick = async () => {
+    const naam    = nameInput.value.trim();
+    const bericht = textArea.value.trim();
+
+    errDiv.style.display = 'none';
+
+    if (!naam) { toonFout('Vul je naam in.'); return; }
+    if (!reviewRating) { toonFout('Geef een beoordeling (1 tot 5 sterren).'); return; }
+    if (!bericht) { toonFout('Schrijf een bericht.'); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Versturen...';
+    submitBtn.style.background = '#666';
+
+    try {
+      const res = await fetch(API_BASE + '/gastenboek', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          naam:    naam,
+          sterren: reviewRating,
+          bericht: bericht
+        })
+      });
+
+      const data = await res.json().catch(function() { return {}; });
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Er ging iets mis.');
+      }
+
+      formInner.style.display = 'none';
+      successDiv.style.display = 'block';
+
+    } catch (e) {
+      toonFout(e.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Verstuur';
+      submitBtn.style.background = '#333';
     }
-
-    overlay.querySelector('#reviewFormInner').style.display = 'none';
-    overlay.querySelector('#reviewSuccess').style.display = 'block';
   };
 
-  // Sluiten knoppen
+  function toonFout(msg) {
+    errDiv.textContent = msg;
+    errDiv.style.display = 'block';
+  }
+
+  // ── Nog een bericht ──
+  overlay.querySelector('#nogEenBtn').onclick = () => {
+    nameInput.value = '';
+    textArea.value = '';
+    reviewRating = 0;
+    updateStars();
+    charCount.textContent = '0 / 2000';
+    errDiv.style.display = 'none';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Verstuur';
+    submitBtn.style.background = '#333';
+    successDiv.style.display = 'none';
+    formInner.style.display = 'block';
+  };
+
+  // ── Reviews laden ──
+  async function laadReviews() {
+    container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Laden...</div>';
+    paginering.style.display = 'none';
+
+    try {
+      const res = await fetch(API_BASE + '/gastenboek?sort=desc&limit=500');
+      allReviews = await res.json();
+
+      tabLees.textContent = 'Berichten (' + allReviews.length + ')';
+
+      if (!allReviews.length) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">' +
+          '<p style="font-size:16px; font-weight:bold;">Geen berichten</p>' +
+          '<p style="font-size:13px;">Wees de eerste die schrijft!</p></div>';
+        return;
+      }
+
+      totalPages = Math.ceil(allReviews.length / REVIEWS_PER_PAGE);
+
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      toonPagina();
+
+    } catch (e) {
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#cc0000;">' +
+        '<p style="font-weight:bold;">Kon berichten niet laden</p>' +
+        '<p style="font-size:12px; color:#999;">' + escapeHtml(e.message) + '</p></div>';
+    }
+  }
+
+  function toonPagina() {
+    var start = (currentPage - 1) * REVIEWS_PER_PAGE;
+    var end   = Math.min(start + REVIEWS_PER_PAGE, allReviews.length);
+    var pageReviews = allReviews.slice(start, end);
+
+    // Gemiddelde over ALLE reviews
+    var total = 0;
+    for (var i = 0; i < allReviews.length; i++) {
+      total += allReviews[i].Sterren;
+    }
+    var gem = (total / allReviews.length).toFixed(1);
+    var gemRound = Math.round(gem);
+
+    var sterrenGem = '';
+    for (var s = 0; s < 5; s++) {
+      sterrenGem += s < gemRound ? '&#9733;' : '&#9734;';
+    }
+
+    var html = '<div style="text-align:center; padding:12px; margin-bottom:12px; ' +
+      'background:#f9f9f9; border-radius:8px; border:1px solid #eee;">' +
+      '<div style="font-size:28px; color:#f5a623;">' + sterrenGem + '</div>' +
+      '<div style="font-size:14px; color:#666; margin-top:4px;">' +
+      '<strong>' + gem + '</strong> gemiddeld  —  ' +
+      allReviews.length + (allReviews.length === 1 ? ' bericht' : ' berichten') +
+      '</div></div>';
+
+    for (var r = 0; r < pageReviews.length; r++) {
+      var review = pageReviews[r];
+      var sterren = '';
+      for (var j = 0; j < 5; j++) {
+        sterren += j < review.Sterren ? '&#9733;' : '&#9734;';
+      }
+      var datum = formateerDatum(review.CreatedAt);
+
+      html += '<div style="border-bottom:1px solid #f0f0f0; padding:14px 0;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+        '<strong style="font-size:15px; color:#222;">' + escapeHtml(review.Naam) + '</strong>' +
+        '<span style="font-size:12px; color:#aaa;">' + datum + '</span></div>' +
+        '<div style="color:#f5a623; font-size:16px; margin-bottom:6px;">' + sterren + '</div>' +
+        '<p style="margin:0; font-size:14px; color:#444; line-height:1.5; white-space:pre-wrap;">' +
+        escapeHtml(review.Bericht) + '</p></div>';
+    }
+
+    container.innerHTML = html;
+
+    // Paginering tonen/verbergen
+    if (totalPages > 1) {
+      paginering.style.display = 'block';
+      pageInfo.textContent = 'Pagina ' + currentPage + ' van ' + totalPages;
+
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.style.opacity = currentPage <= 1 ? '0.4' : '1';
+      prevBtn.style.cursor = currentPage <= 1 ? 'not-allowed' : 'pointer';
+
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.style.opacity = currentPage >= totalPages ? '0.4' : '1';
+      nextBtn.style.cursor = currentPage >= totalPages ? 'not-allowed' : 'pointer';
+    } else {
+      paginering.style.display = 'none';
+    }
+
+    // Scroll naar boven in de container
+    var kaart = overlay.querySelector('#reviewKaart');
+    if (kaart) kaart.scrollTop = 0;
+  }
+
+  // ── Paginering knoppen ──
+  prevBtn.onclick = function() {
+    if (currentPage > 1) {
+      currentPage--;
+      toonPagina();
+    }
+  };
+
+  nextBtn.onclick = function() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      toonPagina();
+    }
+  };
+
+  // ── Sluiten ──
   function sluit() {
     overlay.remove();
     canvas.requestPointerLock();
   }
 
-  overlay.querySelector('#sluitReviewBtn').onclick = sluit;
+  overlay.querySelector('#sluitReviewBtn').onclick  = sluit;
   overlay.querySelector('#sluitSuccessBtn').onclick = sluit;
+  overlay.querySelector('#sluitLijstBtn').onclick   = sluit;
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) sluit();
+  });
+}
+
+// ── Hulpfuncties ──
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formateerDatum(dateStr) {
+  try {
+    var d = new Date(dateStr);
+    return d.toLocaleDateString('nl-NL', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    return dateStr;
+  }
 }
 
 // ---- CONTROLS ----
